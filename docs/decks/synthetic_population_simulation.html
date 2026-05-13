@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Synthetic Population Simulation — Draft v1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background: #ffffff;
+  color: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { position: relative; height: 100vh; overflow: hidden; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: none;
+  padding: 64px 80px 80px;
+  overflow-y: auto;
+}
+.slide.active { display: flex; flex-direction: column; align-items: center; }
+
+.slide h1 {
+  font-size: 36px; font-weight: 600; letter-spacing: -0.01em;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 16px;
+  width: 100%; max-width: 1200px;
+}
+.slide h2 {
+  font-size: 20px; font-weight: 400; color: #6c757d;
+  margin-bottom: 28px;
+  width: 100%; max-width: 1200px;
+}
+.slide h3 {
+  font-size: 19px; font-weight: 600;
+  margin: 22px 0 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.slide.title { justify-content: center; align-items: center; text-align: center; padding: 40px; }
+.slide.title h1 { font-size: 54px; margin-bottom: 22px; max-width: 1000px; justify-content: center; }
+.slide.title h2 { font-size: 24px; color: #495057; margin-bottom: 0; max-width: 820px; }
+.slide.title .meta { margin-top: 52px; color: #adb5bd; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.slide.title .hero-art { margin-top: 36px; opacity: 0.85; }
+
+.body { flex: 1; display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 1200px; }
+.body p { font-size: 17.5px; }
+.body ul, .body ol { padding-left: 24px; }
+.body li { margin-bottom: 7px; font-size: 16.5px; }
+
+.two-col  { display: grid; grid-template-columns: 1fr 1fr;     gap: 32px; }
+.three-col{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 18px 20px;
+  background: #ffffff;
+}
+.card h3 { margin-top: 0; }
+.card ul { padding-left: 20px; }
+.card li { font-size: 15.5px; margin-bottom: 6px; }
+.card p.tag { font-size: 13px; color: #868e96; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.placeholder {
+  border: 2px dashed #ced4da;
+  border-radius: 8px;
+  background: #f8f9fa;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: #868e96;
+  padding: 40px 24px;
+  text-align: center;
+}
+.placeholder .label { font-size: 16px; font-weight: 600; color: #495057; letter-spacing: 0.02em; }
+.placeholder .hint  { font-size: 14px; margin-top: 8px; line-height: 1.5; max-width: 500px; }
+
+/* heatmap */
+.heatmap {
+  display: grid;
+  grid-template-columns: 120px repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+.heatmap .hcell {
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 4px;
+  line-height: 1.25;
+}
+.heatmap .hhead { background: transparent; color: #495057; font-weight: 600; font-size: 14.5px; }
+.heatmap .hrow  { background: transparent; color: #495057; font-weight: 600; text-align: left; padding-left: 6px; font-size: 15.5px; }
+.heatmap .delta { font-size: 13px; font-weight: 500; opacity: 0.75; margin-top: 2px; }
+.heatmap .win-a { color: #1a472a; }
+.heatmap .win-b { color: #7c3a00; }
+.heatmap .a-lo  { background: #e6f4ea; }
+.heatmap .a-mid { background: #b6dfc3; }
+.heatmap .a-hi  { background: #7cc59c; }
+.heatmap .b-lo  { background: #fdecd4; }
+.heatmap .b-mid { background: #f7c987; }
+.heatmap .b-hi  { background: #ed9b3e; color: #4a2c0a; }
+
+/* tables */
+table.data { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 16px; }
+table.data th { text-align: left; padding: 12px 14px; border-bottom: 1.5px solid #343a40; font-weight: 600; }
+table.data td { padding: 12px 14px; border-bottom: 1px solid #e9ecef; }
+table.data .right { text-align: right; }
+table.data tr:last-child td { border-bottom: none; }
+
+/* action funnel */
+.funnel { display: flex; gap: 8px; margin-top: 4px; }
+.funnel .step {
+  flex: 1;
+  padding: 14px 10px;
+  border: 1px solid #adb5bd;
+  border-radius: 8px;
+  text-align: center;
+  background: #ffffff;
+  position: relative;
+}
+.funnel .step .ic   { color: #495057; margin-bottom: 8px; display: flex; justify-content: center; }
+.funnel .step .num  { font-size: 12px; color: #adb5bd; letter-spacing: 0.1em; }
+.funnel .step .lbl  { font-size: 17px; font-weight: 600; margin: 4px 0 4px; }
+.funnel .step .note { font-size: 13px; color: #6c757d; }
+
+/* callouts */
+.callout {
+  border-left: 3px solid #495057;
+  padding: 12px 18px;
+  background: #f8f9fa;
+  font-size: 16px;
+  font-style: italic;
+  color: #343a40;
+  border-radius: 0 6px 6px 0;
+}
+
+/* legend */
+.legend { display: flex; flex-wrap: wrap; gap: 20px; font-size: 14px; color: #495057; margin-top: 14px; align-items: center; }
+.legend .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 7px; vertical-align: -2px; }
+
+.note-small { font-size: 14px; color: #868e96; }
+
+/* SVG icons inline */
+.icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.icon-lg { width: 28px; height: 28px; stroke-width: 1.5; }
+.icon-xl { width: 40px; height: 40px; stroke-width: 1.4; }
+
+/* data source row */
+.sources { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 10px 0 6px; }
+.sources .source {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  background: #ffffff;
+}
+.sources .source .lbl { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+.sources .source .note { font-size: 13.5px; color: #6c757d; }
+.sources .source .ic { color: #495057; }
+
+/* icon-bullet list */
+.ic-list { list-style: none; padding: 0; margin: 0; }
+.ic-list li { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 9px; font-size: 16px; }
+.ic-list li .ic { color: #495057; margin-top: 1px; }
+
+/* layer cake diagram for slide 3 */
+.layers { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.layers .layer {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13.5px;
+  background: #f8f9fa;
+  color: #495057;
+}
+.layers .layer.sim {
+  background: #e6f4ea;
+  border-color: #7cc59c;
+  color: #1a472a;
+  font-weight: 600;
+}
+.layers .layer .tag { font-size: 11px; color: #868e96; margin-left: auto; text-transform: uppercase; letter-spacing: 0.05em; }
+.layers .layer.sim .tag { color: #1a472a; opacity: 0.7; }
+
+/* product card icon */
+.card .card-ic { color: #495057; margin-bottom: 8px; }
+
+/* flow strip for worked example */
+.flow {
+  display: flex; align-items: center; gap: 6px;
+  margin: 4px 0 8px;
+  flex-wrap: nowrap;
+}
+.flow .node {
+  border: 1px solid #adb5bd;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #495057;
+  background: #ffffff;
+  display: flex; align-items: center; gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+.flow .arr { color: #adb5bd; flex-shrink: 0; }
+
+/* mode cards (slide 3) */
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.mode-card {
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 18px 22px 20px;
+  background: #ffffff;
+  display: flex; flex-direction: column;
+}
+.mode-card .mode-head { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; }
+.mode-card .mode-tag {
+  font-size: 12px;
+  color: #2c5282;
+  background: #e7eef7;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.mode-card h3 { margin: 0; font-size: 21px; }
+.mode-card .mode-sub { font-size: 15px; color: #6c757d; margin-bottom: 8px; }
+.mode-card .mode-flow {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 8px;
+  margin: 6px 0 10px;
+}
+.mode-card h4 {
+  font-size: 12.5px;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+.mode-card ul { padding-left: 20px; margin-top: 4px; }
+.mode-card li { font-size: 15.5px; margin-bottom: 5px; }
+
+/* template chrome */
+.slide:not(.title) > h2 {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 22px;
+}
+.slide:not(.title) { padding-bottom: 100px; }
+
+.tpl-bar {
+  position: fixed;
+  left: 72px; right: 72px;
+  bottom: 38px;
+  height: 2px;
+  background: #2c5282;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* footer */
+.foot       { position: fixed; bottom: 14px; right: 22px; font-size: 11.5px; color: #6c757d; letter-spacing: 0.04em; z-index: 10; }
+.foot-left  { position: fixed; bottom: 14px; left: 22px;  font-size: 11.5px; color: #6c757d; letter-spacing: 0.04em; z-index: 10; }
+
+body.on-title .tpl-bar,
+body.on-title .foot,
+body.on-title .foot-left { display: none; }
+
+@media print {
+  html, body { height: auto; }
+  .deck { height: auto; overflow: visible; }
+  .slide { display: flex !important; position: relative; inset: auto; height: 100vh; page-break-after: always; }
+  .foot, .foot-left, .tpl-bar { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ICON LIBRARY ------------------------------------------------ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <symbol id="ic-person" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="3.2"/>
+    <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>
+  </symbol>
+  <symbol id="ic-people" viewBox="0 0 24 24">
+    <circle cx="9" cy="9" r="2.6"/>
+    <circle cx="17" cy="10" r="2.2"/>
+    <path d="M3 19c0-3 2.7-5 6-5s6 2 6 5"/>
+    <path d="M14 19c0-2.4 1.8-3.5 3.5-3.5S21 16.6 21 19"/>
+  </symbol>
+  <symbol id="ic-agent" viewBox="0 0 24 24">
+    <rect x="6" y="7" width="12" height="12" rx="3"/>
+    <circle cx="9.8" cy="12" r="1" fill="currentColor" stroke="none"/>
+    <circle cx="14.2" cy="12" r="1" fill="currentColor" stroke="none"/>
+    <path d="M10 16h4"/>
+    <path d="M12 4v3"/>
+    <circle cx="12" cy="3.5" r="1"/>
+  </symbol>
+  <symbol id="ic-brain" viewBox="0 0 24 24">
+    <path d="M9 5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3"/>
+    <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+    <path d="M12 9v6"/>
+    <path d="M9 12h6"/>
+  </symbol>
+  <symbol id="ic-graph" viewBox="0 0 24 24">
+    <circle cx="6" cy="6" r="2"/>
+    <circle cx="18" cy="7" r="2"/>
+    <circle cx="6" cy="18" r="2"/>
+    <circle cx="18" cy="18" r="2"/>
+    <circle cx="12" cy="12" r="2"/>
+    <path d="M7.6 7.2 10.5 10.5"/>
+    <path d="M16.5 8.4 13.5 11"/>
+    <path d="M7.4 16.6 10.6 13.4"/>
+    <path d="M16.5 16.6 13.4 13.5"/>
+  </symbol>
+  <symbol id="ic-panel" viewBox="0 0 24 24">
+    <rect x="5" y="3" width="14" height="18" rx="2"/>
+    <path d="M9 3v2h6V3"/>
+    <path d="M8 10h8"/>
+    <path d="M8 14h8"/>
+    <path d="M8 18h5"/>
+  </symbol>
+  <symbol id="ic-survey" viewBox="0 0 24 24">
+    <path d="M4 20V8"/>
+    <path d="M4 20h16"/>
+    <rect x="6" y="14" width="3" height="6"/>
+    <rect x="11" y="10" width="3" height="10"/>
+    <rect x="16" y="6" width="3" height="14"/>
+  </symbol>
+  <symbol id="ic-product" viewBox="0 0 24 24">
+    <path d="M6 8h12l-1 12H7L6 8z"/>
+    <path d="M9 8a3 3 0 1 1 6 0"/>
+  </symbol>
+  <symbol id="ic-heart" viewBox="0 0 24 24">
+    <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>
+  </symbol>
+  <symbol id="ic-target" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8"/>
+    <circle cx="12" cy="12" r="4"/>
+    <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="ic-trend" viewBox="0 0 24 24">
+    <path d="M3 17l5-5 4 4 6-8"/>
+    <path d="M14 8h4v4"/>
+  </symbol>
+  <symbol id="ic-warning" viewBox="0 0 24 24">
+    <path d="M12 3 2 20h20L12 3z"/>
+    <path d="M12 10v5"/>
+    <circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="ic-scales" viewBox="0 0 24 24">
+    <path d="M12 4v16"/>
+    <path d="M5 8h14"/>
+    <path d="M5 8 2 14a3 3 0 0 0 6 0L5 8z"/>
+    <path d="M19 8l-3 6a3 3 0 0 0 6 0L19 8z"/>
+    <path d="M8 20h8"/>
+  </symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8"/>
+    <path d="M12 8v4l3 2"/>
+  </symbol>
+  <symbol id="ic-funnel" viewBox="0 0 24 24">
+    <path d="M4 5h16l-6 8v6l-4 1v-7L4 5z"/>
+  </symbol>
+  <symbol id="ic-spark" viewBox="0 0 24 24">
+    <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+    <path d="M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/>
+    <circle cx="12" cy="12" r="2.2"/>
+  </symbol>
+  <symbol id="ic-network" viewBox="0 0 24 24">
+    <circle cx="12" cy="5" r="2"/>
+    <circle cx="5" cy="19" r="2"/>
+    <circle cx="19" cy="19" r="2"/>
+    <path d="M12 7v6"/>
+    <path d="M12 13l-5.5 4.5"/>
+    <path d="M12 13l5.5 4.5"/>
+  </symbol>
+  <symbol id="ic-arrow-right" viewBox="0 0 24 24">
+    <path d="M5 12h14"/>
+    <path d="M13 6l6 6-6 6"/>
+  </symbol>
+  <symbol id="ic-database" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="5.5" rx="7" ry="2.5"/>
+    <path d="M5 5.5v6c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-6"/>
+    <path d="M5 11.5v6c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-6"/>
+  </symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24">
+    <path d="M12 3l8 3v5c0 5-4 9-8 10-4-1-8-5-8-10V6l8-3z"/>
+    <path d="M9 12l2 2 4-4"/>
+  </symbol>
+  <symbol id="ic-layers" viewBox="0 0 24 24">
+    <path d="M12 4 3 9l9 5 9-5-9-5z"/>
+    <path d="M3 14l9 5 9-5"/>
+  </symbol>
+  <symbol id="ic-question" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-1 .4-1 1.2-1 1.7"/>
+    <circle cx="12" cy="16.5" r="0.6" fill="currentColor" stroke="none"/>
+  </symbol>
+</defs>
+</svg>
+
+<div class="deck" id="deck">
+
+<!-- 01 TITLE ------------------------------------------------ -->
+<section class="slide active title">
+  <h1>Synthetic Population Simulation</h1>
+  <h2>A calibrated layer on top of measurement — first-draft pitch</h2>
+  <svg class="hero-art" viewBox="0 0 620 90" width="620" height="90" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#adb5bd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <!-- graph nodes (substrate) -->
+      <g transform="translate(40,45)">
+        <circle cx="0"  cy="-18" r="5" fill="#fff"/>
+        <circle cx="-18" cy="10" r="5" fill="#fff"/>
+        <circle cx="18"  cy="10" r="5" fill="#fff"/>
+        <circle cx="0"   cy="0"  r="5" fill="#fff"/>
+        <path d="M0 -13L0 -5"/>
+        <path d="M-14 7L-3 1"/>
+        <path d="M14 7L3 1"/>
+      </g>
+      <text x="40" y="80" text-anchor="middle" font-size="10" fill="#868e96" font-family="-apple-system,sans-serif">substrate</text>
+
+      <!-- arrow 1 -->
+      <path d="M90 45 L160 45"/>
+      <path d="M153 41 L160 45 L153 49"/>
+
+      <!-- people (agents) -->
+      <g transform="translate(220,45)">
+        <g transform="translate(-44,0)"><circle cx="0" cy="-8" r="4" fill="#fff"/><path d="M-7 8c0-4.6 14-4.6 14 0"/></g>
+        <g transform="translate(-15,0)"><circle cx="0" cy="-8" r="4" fill="#fff"/><path d="M-7 8c0-4.6 14-4.6 14 0"/></g>
+        <g transform="translate(14,0)"><circle cx="0" cy="-8" r="4" fill="#fff"/><path d="M-7 8c0-4.6 14-4.6 14 0"/></g>
+        <g transform="translate(43,0)"><circle cx="0" cy="-8" r="4" fill="#fff"/><path d="M-7 8c0-4.6 14-4.6 14 0"/></g>
+      </g>
+      <text x="220" y="80" text-anchor="middle" font-size="10" fill="#868e96" font-family="-apple-system,sans-serif">synthetic population</text>
+
+      <!-- arrow 2 -->
+      <path d="M290 45 L360 45"/>
+      <path d="M353 41 L360 45 L353 49"/>
+
+      <!-- simulation engine -->
+      <g transform="translate(410,45)">
+        <rect x="-22" y="-22" width="44" height="44" rx="6" fill="#fff"/>
+        <circle cx="-9" cy="-3" r="1.4" fill="#adb5bd" stroke="none"/>
+        <circle cx="9"  cy="-3" r="1.4" fill="#adb5bd" stroke="none"/>
+        <path d="M-8 9c4 4 12 4 16 0"/>
+        <path d="M0 -22 L0 -27"/>
+        <circle cx="0" cy="-28" r="1.4" fill="#fff"/>
+      </g>
+      <text x="410" y="80" text-anchor="middle" font-size="10" fill="#868e96" font-family="-apple-system,sans-serif">simulation</text>
+
+      <!-- arrow 3 -->
+      <path d="M460 45 L530 45"/>
+      <path d="M523 41 L530 45 L523 49"/>
+
+      <!-- results bar chart -->
+      <g transform="translate(580,45)">
+        <path d="M-18 12 L18 12"/>
+        <rect x="-15" y="0" width="6" height="12" fill="#fff"/>
+        <rect x="-5" y="-8" width="6" height="20" fill="#fff"/>
+        <rect x="5"  y="-4" width="6" height="16" fill="#fff"/>
+      </g>
+      <text x="580" y="80" text-anchor="middle" font-size="10" fill="#868e96" font-family="-apple-system,sans-serif">decisions</text>
+    </g>
+  </svg>
+  <div class="meta">Internal draft · v1</div>
+</section>
+
+<!-- 02 THE PAIN ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-clock"/></svg>The pain we already know</h1>
+  <h2>Brand Lift, Sales Lift, copy test, MMM today</h2>
+  <div class="body">
+    <ul>
+      <li>Lift studies and copy tests take weeks. Clean-room jobs take longer.</li>
+      <li>Sample collapses in the audience cells we most want to measure.</li>
+      <li>Identifier resolution between exposure and outcome is bilateral, legal-heavy, slow.</li>
+      <li>Many decisions never get a measurement at all — cell too thin, question too small to fund.</li>
+    </ul>
+    <div class="callout">Headline questions are well served today. Specific questions are not.</div>
+  </div>
+</section>
+
+<!-- 03 SPECTRUM OF USE ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-scales"/></svg>A spectrum of use — from gap-fill to full simulation</h1>
+  <h2>Run alongside a real study, plug a missing piece, or replace it entirely.</h2>
+  <div class="body">
+    <div class="mode-grid">
+
+      <!-- Mode A: Gap-fill -->
+      <div class="mode-card">
+        <div class="mode-head">
+          <span class="mode-tag">Mode A</span>
+          <h3>Gap-fill</h3>
+        </div>
+        <p class="mode-sub">Run alongside an existing study to plug a missing piece.</p>
+        <div class="mode-flow">
+          <svg viewBox="0 0 480 130" width="100%" xmlns="http://www.w3.org/2000/svg" aria-label="Gap-fill flow">
+            <g fill="none" stroke="#495057" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" font-family="-apple-system,sans-serif">
+              <rect x="14" y="49" width="74" height="32" rx="6" fill="#fff" stroke="#adb5bd"/>
+              <text x="51" y="69" text-anchor="middle" font-size="12.5" fill="#1a1a1a" stroke="none">Brief</text>
+
+              <path d="M90 56 L165 25"/>
+              <path d="M159 22 L165 25 L160 30"/>
+              <path d="M90 74 L165 105"/>
+              <path d="M160 100 L165 105 L159 108"/>
+
+              <rect x="170" y="10" width="140" height="32" rx="6" fill="#fff" stroke="#7cc59c"/>
+              <text x="240" y="30" text-anchor="middle" font-size="12.5" fill="#1a472a" stroke="none">Real study cells</text>
+
+              <rect x="170" y="88" width="140" height="32" rx="6" fill="#e7eef7" stroke="#2c5282"/>
+              <text x="240" y="108" text-anchor="middle" font-size="12.5" fill="#2c5282" stroke="none">Sim fills gaps</text>
+
+              <path d="M312 25 L380 56"/>
+              <path d="M375 53 L380 56 L375 60"/>
+              <path d="M312 105 L380 74"/>
+              <path d="M375 71 L380 74 L375 77"/>
+
+              <rect x="385" y="49" width="80" height="32" rx="6" fill="#fff" stroke="#adb5bd"/>
+              <text x="425" y="69" text-anchor="middle" font-size="12.5" fill="#1a1a1a" stroke="none">Blended</text>
+            </g>
+          </svg>
+        </div>
+        <h4>When to use</h4>
+        <ul>
+          <li>Cells too thin to report</li>
+          <li>Scenario not tested by the study</li>
+          <li>Variant not included in the original brief</li>
+          <li>Forward-looking forecast where data does not yet exist</li>
+        </ul>
+      </div>
+
+      <!-- Mode B: Full simulation -->
+      <div class="mode-card">
+        <div class="mode-head">
+          <span class="mode-tag">Mode B</span>
+          <h3>Full simulation</h3>
+        </div>
+        <p class="mode-sub">Run as a standalone study when a real panel isn't feasible.</p>
+        <div class="mode-flow">
+          <svg viewBox="0 0 480 130" width="100%" xmlns="http://www.w3.org/2000/svg" aria-label="Full simulation flow">
+            <g fill="none" stroke="#495057" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" font-family="-apple-system,sans-serif">
+              <rect x="14" y="49" width="70" height="32" rx="6" fill="#fff" stroke="#adb5bd"/>
+              <text x="49" y="69" text-anchor="middle" font-size="12.5" fill="#1a1a1a" stroke="none">Brief</text>
+
+              <path d="M86 65 L114 65"/>
+              <path d="M108 61 L114 65 L108 69"/>
+
+              <rect x="117" y="49" width="115" height="32" rx="6" fill="#e7eef7" stroke="#2c5282"/>
+              <text x="174" y="69" text-anchor="middle" font-size="12.5" fill="#2c5282" stroke="none">Synthetic panel</text>
+
+              <path d="M234 65 L262 65"/>
+              <path d="M256 61 L262 65 L256 69"/>
+
+              <rect x="265" y="49" width="100" height="32" rx="6" fill="#e7eef7" stroke="#2c5282"/>
+              <text x="315" y="69" text-anchor="middle" font-size="12.5" fill="#2c5282" stroke="none">Sim engine</text>
+
+              <path d="M367 65 L395 65"/>
+              <path d="M389 61 L395 65 L389 69"/>
+
+              <rect x="398" y="49" width="68" height="32" rx="6" fill="#fff" stroke="#adb5bd"/>
+              <text x="432" y="69" text-anchor="middle" font-size="12.5" fill="#1a1a1a" stroke="none">Results</text>
+            </g>
+          </svg>
+        </div>
+        <h4>When to use</h4>
+        <ul>
+          <li>Triage and pre-flight before commissioning a panel</li>
+          <li>Exploratory question where speed beats fidelity</li>
+          <li>No real panel commissionable — too niche, sensitive, or future</li>
+          <li>Scenario rehearsal: &ldquo;what would happen if&hellip;&rdquo;</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 04 SUBSTRATE ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-database"/></svg>Why us — the substrate</h1>
+  <h2>The only durable differentiator</h2>
+  <div class="body">
+    <p>Every "AI consumer" demo on the market today is built on LLM priors and web scrape — stereotyped composites of what a 25-year-old urban professional <em>might</em> be.</p>
+    <p>Ours is built on consented data with provenance:</p>
+    <div class="sources">
+      <div class="source">
+        <svg class="icon icon-lg ic"><use href="#ic-panel"/></svg>
+        <div class="lbl">Panel data</div>
+        <div class="note">purchase, viewership, longitudinal behaviour</div>
+      </div>
+      <div class="source">
+        <svg class="icon icon-lg ic"><use href="#ic-survey"/></svg>
+        <div class="lbl">Survey data</div>
+        <div class="note">attitudes, brand affinity, claimed behaviour</div>
+      </div>
+      <div class="source">
+        <svg class="icon icon-lg ic"><use href="#ic-product"/></svg>
+        <div class="lbl">Ownership</div>
+        <div class="note">products owned, used, liked</div>
+      </div>
+      <div class="source">
+        <svg class="icon icon-lg ic"><use href="#ic-heart"/></svg>
+        <div class="lbl">Interests</div>
+        <div class="note">hobbies, lifestyle signals, affinities</div>
+      </div>
+    </div>
+    <div class="callout">Every node and every edge traces back to a consented panel read. That property cannot be replicated by anyone who does not own calibrated panel breadth.</div>
+  </div>
+</section>
+
+<!-- 05 KNOWLEDGE GRAPH ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-graph"/></svg>The knowledge graph</h1>
+  <h2>Why graph: complex world, multi-hop questions</h2>
+  <div class="body" style="flex-direction:row; gap:32px;">
+    <div style="flex: 1.5;">
+      <div class="placeholder" style="height: 100%; min-height: 440px;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <use href="#ic-graph"/>
+        </svg>
+        <div class="label" style="margin-top:14px;">Graph DB visualisation</div>
+        <div class="hint">Households · exposure · products · categories · trips · outcomes<br>Multi-hop relationships with propensity-weighted edges</div>
+      </div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+      <h3 style="margin-top:0;">What's in it</h3>
+      <ul class="ic-list">
+        <li><svg class="icon ic"><use href="#ic-person"/></svg><span>Identity table from panel</span></li>
+        <li><svg class="icon ic"><use href="#ic-product"/></svg><span>Behaviour, exposure, ownership</span></li>
+        <li><svg class="icon ic"><use href="#ic-heart"/></svg><span>Attitudes and interest propensities</span></li>
+        <li><svg class="icon ic"><use href="#ic-network"/></svg><span>Typed edges, not freeform relationships</span></li>
+      </ul>
+      <h3>What it enables</h3>
+      <ul class="ic-list">
+        <li><svg class="icon ic"><use href="#ic-arrow-right"/></svg><span>Multi-hop: household → exposure → SKU → category → outcome</span></li>
+        <li><svg class="icon ic"><use href="#ic-shield"/></svg><span>Schema-validated, deterministic loading</span></li>
+        <li><svg class="icon ic"><use href="#ic-clock"/></svg><span>Same seed → byte-identical graph</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 06 CALIBRATION ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-scales"/></svg>Calibration is the discipline</h1>
+  <h2>Sims earn trust one cell at a time, not by demo</h2>
+  <div class="body">
+    <p>For every simulated metric, we ship a measurable counterpart and track the residual over time. We call this the <em>peg pattern</em>.</p>
+    <h3><svg class="icon"><use href="#ic-target"/></svg>Calibration matrix</h3>
+    <table class="data">
+      <thead>
+        <tr><th>Decision class</th><th>Peg source</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Brand Lift triage</td><td>Brand Lift survey waves</td><td>Phase 1 target</td></tr>
+        <tr><td>Creative pre-test</td><td>BASES / copy-test outputs</td><td>Phase 1 target</td></tr>
+        <tr><td>Sales Lift triage</td><td>Homescan / loyalty</td><td>Phase 2</td></tr>
+        <tr><td>Sentiment trajectory</td><td>Social listening + brand tracker</td><td>Phase 2</td></tr>
+        <tr><td>Cross-domain risk</td><td>To be defined per vertical</td><td>Roadmap</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">Trust is earned per cell. A class without a stable residual is not a product.</div>
+  </div>
+</section>
+
+<!-- 07 KPI BATTERY ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-trend"/></svg>What we measure to know it works</h1>
+  <h2>Three tiers of validation, not one number</h2>
+  <div class="body">
+    <div class="three-col">
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-graph"/></svg>
+        <h3>Graph QC</h3>
+        <ul>
+          <li>Coverage of population segments</li>
+          <li>Entity hygiene (dedup, schema)</li>
+          <li>Aggregate marginal fit vs panel</li>
+          <li>Freshness lag</li>
+          <li>Month-on-month drift</li>
+        </ul>
+      </div>
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-agent"/></svg>
+        <h3>Agent QC</h3>
+        <ul>
+          <li>Persona–panel alignment</li>
+          <li>Determinism (seed-stable)</li>
+          <li>Within-cohort diversity</li>
+          <li>Cross-LLM robustness</li>
+        </ul>
+      </div>
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-scales"/></svg>
+        <h3>Simulation QC</h3>
+        <ul>
+          <li>Sim-vs-peg residual</li>
+          <li>Calibration plot (band coverage)</li>
+          <li>Lift over naïve baseline</li>
+          <li>Residual stability over time</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note-small">Each tier has its own audit cadence and its own pass/fail thresholds.</p>
+  </div>
+</section>
+
+<!-- 08 AGENTS ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-people"/></svg>Agents</h1>
+  <h2>Census pool · synthetic fit · library curation</h2>
+  <div class="body">
+    <!-- agents flow diagram -->
+    <svg viewBox="0 0 880 220" width="100%" style="max-width:1100px; max-height:240px;" xmlns="http://www.w3.org/2000/svg" aria-label="Agents flow">
+      <g fill="none" stroke="#495057" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- CENSUS POOL: large circle with many dots -->
+        <g transform="translate(135,100)">
+          <circle r="78" fill="#f8f9fa" stroke="#adb5bd"/>
+          <!-- dot grid -->
+          <g fill="#adb5bd" stroke="none">
+            <!-- 7 cols x 7 rows of dots, clipped to circle (visual approx) -->
+            <circle cx="-50" cy="-12" r="2.2"/>
+            <circle cx="-36" cy="-30" r="2.2"/>
+            <circle cx="-36" cy="-10" r="2.2"/>
+            <circle cx="-36" cy="10" r="2.2"/>
+            <circle cx="-36" cy="30" r="2.2"/>
+            <circle cx="-20" cy="-50" r="2.2"/>
+            <circle cx="-20" cy="-30" r="2.2"/>
+            <circle cx="-20" cy="-10" r="2.2"/>
+            <circle cx="-20" cy="10"  r="2.2"/>
+            <circle cx="-20" cy="30"  r="2.2"/>
+            <circle cx="-20" cy="50"  r="2.2"/>
+            <circle cx="0"   cy="-58" r="2.2"/>
+            <circle cx="0"   cy="-38" r="2.2"/>
+            <circle cx="0"   cy="-18" r="2.2"/>
+            <circle cx="0"   cy="2"   r="2.2"/>
+            <circle cx="0"   cy="22"  r="2.2"/>
+            <circle cx="0"   cy="42"  r="2.2"/>
+            <circle cx="0"   cy="58"  r="2.2"/>
+            <circle cx="20"  cy="-50" r="2.2"/>
+            <circle cx="20"  cy="-30" r="2.2"/>
+            <circle cx="20"  cy="-10" r="2.2"/>
+            <circle cx="20"  cy="10"  r="2.2"/>
+            <circle cx="20"  cy="30"  r="2.2"/>
+            <circle cx="20"  cy="50"  r="2.2"/>
+            <circle cx="36"  cy="-30" r="2.2"/>
+            <circle cx="36"  cy="-10" r="2.2"/>
+            <circle cx="36"  cy="10"  r="2.2"/>
+            <circle cx="36"  cy="30"  r="2.2"/>
+            <circle cx="50"  cy="-12" r="2.2"/>
+            <circle cx="50"  cy="12"  r="2.2"/>
+          </g>
+        </g>
+        <text x="135" y="200" text-anchor="middle" font-size="13" fill="#1a1a1a" font-weight="600" font-family="-apple-system,sans-serif">Census pool</text>
+        <text x="135" y="216" text-anchor="middle" font-size="11" fill="#868e96" font-family="-apple-system,sans-serif">all panel-derived agents</text>
+
+        <!-- ARROW -->
+        <path d="M225 100 L320 100"/>
+        <path d="M313 95 L320 100 L313 105"/>
+        <text x="272" y="86" text-anchor="middle" font-size="11" fill="#6c757d" font-family="-apple-system,sans-serif">synthetic fit</text>
+
+        <!-- FIT SUBSET: medium circle with subset of dots highlighted -->
+        <g transform="translate(420,100)">
+          <circle r="50" fill="#e6f4ea" stroke="#7cc59c"/>
+          <g fill="#7cc59c" stroke="none">
+            <circle cx="-26" cy="-10" r="2.4"/>
+            <circle cx="-12" cy="-22" r="2.4"/>
+            <circle cx="-12" cy="6"   r="2.4"/>
+            <circle cx="2"   cy="-12" r="2.4"/>
+            <circle cx="2"   cy="14"  r="2.4"/>
+            <circle cx="16"  cy="-22" r="2.4"/>
+            <circle cx="16"  cy="2"   r="2.4"/>
+            <circle cx="28"  cy="-10" r="2.4"/>
+            <circle cx="-20" cy="20"  r="2.4"/>
+            <circle cx="22"  cy="20"  r="2.4"/>
+          </g>
+        </g>
+        <text x="420" y="200" text-anchor="middle" font-size="13" fill="#1a1a1a" font-weight="600" font-family="-apple-system,sans-serif">Fit subset</text>
+        <text x="420" y="216" text-anchor="middle" font-size="11" fill="#868e96" font-family="-apple-system,sans-serif">relevant to question · declared criteria</text>
+
+        <!-- ARROW -->
+        <path d="M482 100 L575 100"/>
+        <path d="M568 95 L575 100 L568 105"/>
+        <text x="528" y="86" text-anchor="middle" font-size="11" fill="#6c757d" font-family="-apple-system,sans-serif">retrospective fit</text>
+
+        <!-- LIBRARY: shelf with labeled rows -->
+        <g transform="translate(620,40)">
+          <rect width="220" height="120" rx="6" fill="#fff" stroke="#adb5bd"/>
+          <line x1="0" y1="40" x2="220" y2="40" stroke="#dee2e6"/>
+          <line x1="0" y1="80" x2="220" y2="80" stroke="#dee2e6"/>
+          <text x="14" y="26" font-size="11.5" fill="#495057" font-family="-apple-system,sans-serif">Brand Lift triage</text>
+          <text x="14" y="66" font-size="11.5" fill="#495057" font-family="-apple-system,sans-serif">Sentiment trajectory</text>
+          <text x="14" y="106" font-size="11.5" fill="#495057" font-family="-apple-system,sans-serif">Defection risk</text>
+          <g fill="#7cc59c" stroke="none">
+            <circle cx="170" cy="22" r="3"/>
+            <circle cx="180" cy="22" r="3"/>
+            <circle cx="190" cy="22" r="3"/>
+            <circle cx="200" cy="22" r="3"/>
+            <circle cx="170" cy="62" r="3"/>
+            <circle cx="180" cy="62" r="3"/>
+            <circle cx="170" cy="102" r="3"/>
+          </g>
+        </g>
+        <text x="730" y="200" text-anchor="middle" font-size="13" fill="#1a1a1a" font-weight="600" font-family="-apple-system,sans-serif">Library</text>
+        <text x="730" y="216" text-anchor="middle" font-size="11" fill="#868e96" font-family="-apple-system,sans-serif">indexed by decision class</text>
+      </g>
+    </svg>
+    <ul style="margin-top:8px;">
+      <li><strong>Census-scale pool</strong> projected deterministically from the substrate. Acts as a control, not a runtime universe.</li>
+      <li><strong>Synthetic-fit subset</strong> selected per question with declared criteria. A contrarian counterfactual subset runs alongside as a bias-laundering check.</li>
+      <li><strong>Library curation</strong> by retrospective fit on known-truth scenarios. Indexed by decision class. Re-validated on a cadence.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 09 ACTION HIERARCHY ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-funnel"/></svg>The action hierarchy</h1>
+  <h2>One grammar across media, commerce, virality, risk</h2>
+  <div class="body">
+    <div class="funnel">
+      <div class="step">
+        <svg class="icon icon-lg ic"><use href="#ic-person"/></svg>
+        <div class="num">01</div>
+        <div class="lbl">Consume</div>
+        <div class="note">passive exposure</div>
+      </div>
+      <div class="step">
+        <svg class="icon icon-lg ic"><use href="#ic-heart"/></svg>
+        <div class="num">02</div>
+        <div class="lbl">Engage</div>
+        <div class="note">active attention</div>
+      </div>
+      <div class="step">
+        <svg class="icon icon-lg ic"><use href="#ic-target"/></svg>
+        <div class="num">03</div>
+        <div class="lbl">Intent</div>
+        <div class="note">lean toward</div>
+      </div>
+      <div class="step">
+        <svg class="icon icon-lg ic"><use href="#ic-product"/></svg>
+        <div class="num">04</div>
+        <div class="lbl">Act</div>
+        <div class="note">commit</div>
+      </div>
+      <div class="step">
+        <svg class="icon icon-lg ic"><use href="#ic-network"/></svg>
+        <div class="num">05</div>
+        <div class="lbl">Propagate</div>
+        <div class="note">share &amp; influence</div>
+      </div>
+    </div>
+    <h3>How it maps</h3>
+    <ul>
+      <li>Copy test &amp; Brand Lift → <strong>Consume + Engage + Intent</strong></li>
+      <li>Sales Lift &amp; MMM pre-flight → <strong>Intent + Act</strong></li>
+      <li>Sentiment &amp; virality → <strong>Engage + Propagate</strong></li>
+      <li>Cross-domain risk → cohort-specific elevation across all five</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10 TWO-TIER ENGINE ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-layers"/></svg>Two-tier engine</h1>
+  <h2>One substrate. Two job-shapes.</h2>
+  <div class="body">
+    <svg viewBox="0 0 880 360" width="100%" style="max-width:1100px; max-height:380px;" xmlns="http://www.w3.org/2000/svg" aria-label="Two-tier engine">
+      <g fill="none" stroke="#495057" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" font-family="-apple-system,sans-serif">
+
+        <!-- DISCOVERY BOX -->
+        <g>
+          <rect x="40" y="20" width="360" height="200" rx="10" fill="#ffffff" stroke="#adb5bd"/>
+          <text x="60" y="48" font-size="14.5" font-weight="600" fill="#1a1a1a" stroke="none">Discovery tier</text>
+          <text x="60" y="66" font-size="11.5" fill="#868e96" stroke="none">conversation-rich · small N · qualitative</text>
+
+          <!-- 3 figures with speech bubbles -->
+          <g transform="translate(90,140)">
+            <circle cx="0" cy="-12" r="10" fill="#fff" stroke="#495057"/>
+            <path d="M-14 22c0-12 28-12 28 0"/>
+            <rect x="22" y="-26" width="80" height="22" rx="4" fill="#f8f9fa" stroke="#ced4da"/>
+            <path d="M22 -16 L16 -10 L22 -8" fill="#f8f9fa" stroke="#ced4da"/>
+            <path d="M30 -18 L96 -18" stroke="#adb5bd"/>
+            <path d="M30 -12 L72 -12" stroke="#adb5bd"/>
+          </g>
+          <g transform="translate(220,140)">
+            <circle cx="0" cy="-12" r="10" fill="#fff" stroke="#495057"/>
+            <path d="M-14 22c0-12 28-12 28 0"/>
+            <rect x="22" y="-26" width="80" height="22" rx="4" fill="#f8f9fa" stroke="#ced4da"/>
+            <path d="M22 -16 L16 -10 L22 -8" fill="#f8f9fa" stroke="#ced4da"/>
+            <path d="M30 -18 L96 -18" stroke="#adb5bd"/>
+            <path d="M30 -12 L68 -12" stroke="#adb5bd"/>
+          </g>
+        </g>
+
+        <!-- PROJECTION BOX -->
+        <g>
+          <rect x="480" y="20" width="360" height="200" rx="10" fill="#ffffff" stroke="#adb5bd"/>
+          <text x="500" y="48" font-size="14.5" font-weight="600" fill="#1a1a1a" stroke="none">Projection tier</text>
+          <text x="500" y="66" font-size="11.5" fill="#868e96" stroke="none">gated · deterministic · large N · quantitative</text>
+
+          <!-- agent grid 10 x 5 -->
+          <g fill="#495057" stroke="none">
+            <!-- row 1 -->
+            <circle cx="510" cy="100" r="3"/><circle cx="540" cy="100" r="3"/><circle cx="570" cy="100" r="3"/>
+            <circle cx="600" cy="100" r="3"/><circle cx="630" cy="100" r="3"/><circle cx="660" cy="100" r="3"/>
+            <circle cx="690" cy="100" r="3"/><circle cx="720" cy="100" r="3"/><circle cx="750" cy="100" r="3"/>
+            <circle cx="780" cy="100" r="3"/><circle cx="810" cy="100" r="3"/>
+            <!-- row 2 -->
+            <circle cx="510" cy="125" r="3"/><circle cx="540" cy="125" r="3"/><circle cx="570" cy="125" r="3"/>
+            <circle cx="600" cy="125" r="3"/><circle cx="630" cy="125" r="3"/><circle cx="660" cy="125" r="3"/>
+            <circle cx="690" cy="125" r="3"/><circle cx="720" cy="125" r="3"/><circle cx="750" cy="125" r="3"/>
+            <circle cx="780" cy="125" r="3"/><circle cx="810" cy="125" r="3"/>
+            <!-- row 3 -->
+            <circle cx="510" cy="150" r="3"/><circle cx="540" cy="150" r="3"/><circle cx="570" cy="150" r="3"/>
+            <circle cx="600" cy="150" r="3"/><circle cx="630" cy="150" r="3"/><circle cx="660" cy="150" r="3"/>
+            <circle cx="690" cy="150" r="3"/><circle cx="720" cy="150" r="3"/><circle cx="750" cy="150" r="3"/>
+            <circle cx="780" cy="150" r="3"/><circle cx="810" cy="150" r="3"/>
+            <!-- row 4 -->
+            <circle cx="510" cy="175" r="3"/><circle cx="540" cy="175" r="3"/><circle cx="570" cy="175" r="3"/>
+            <circle cx="600" cy="175" r="3"/><circle cx="630" cy="175" r="3"/><circle cx="660" cy="175" r="3"/>
+            <circle cx="690" cy="175" r="3"/><circle cx="720" cy="175" r="3"/><circle cx="750" cy="175" r="3"/>
+            <circle cx="780" cy="175" r="3"/><circle cx="810" cy="175" r="3"/>
+            <!-- row 5 (some gated out, lighter) -->
+          </g>
+          <g fill="#ced4da" stroke="none">
+            <circle cx="510" cy="200" r="3"/><circle cx="540" cy="200" r="3"/><circle cx="570" cy="200" r="3"/>
+            <circle cx="600" cy="200" r="3"/><circle cx="630" cy="200" r="3"/><circle cx="660" cy="200" r="3"/>
+            <circle cx="690" cy="200" r="3"/><circle cx="720" cy="200" r="3"/><circle cx="750" cy="200" r="3"/>
+            <circle cx="780" cy="200" r="3"/><circle cx="810" cy="200" r="3"/>
+          </g>
+          <text x="500" y="218" font-size="10.5" fill="#868e96" stroke="none">grey dots: gated out, zero tokens spent</text>
+        </g>
+
+        <!-- bidirectional arrows between tiers -->
+        <g>
+          <path d="M404 105 L476 105"/>
+          <path d="M409 100 L404 105 L409 110"/>
+          <path d="M471 110 L476 105 L471 100" stroke="#495057"/>
+          <text x="440" y="96" font-size="10.5" text-anchor="middle" fill="#6c757d" stroke="none">hypotheses</text>
+
+          <path d="M404 145 L476 145"/>
+          <path d="M409 140 L404 145 L409 150"/>
+          <path d="M471 150 L476 145 L471 140" stroke="#495057"/>
+          <text x="440" y="160" font-size="10.5" text-anchor="middle" fill="#6c757d" stroke="none">anomalies</text>
+        </g>
+
+        <!-- KG SUBSTRATE at bottom -->
+        <g>
+          <rect x="40" y="260" width="800" height="70" rx="10" fill="#f8f9fa" stroke="#adb5bd"/>
+          <text x="440" y="290" font-size="14" font-weight="600" fill="#1a1a1a" stroke="none" text-anchor="middle">Knowledge graph substrate</text>
+          <text x="440" y="310" font-size="11.5" fill="#6c757d" stroke="none" text-anchor="middle">panel · survey · ownership · interests · relationships</text>
+
+          <!-- mini nodes inside substrate -->
+          <g fill="#fff" stroke="#adb5bd">
+            <circle cx="90"  cy="295" r="6"/>
+            <circle cx="130" cy="285" r="6"/>
+            <circle cx="130" cy="305" r="6"/>
+            <path d="M96 295 L124 287" stroke="#ced4da"/>
+            <path d="M96 295 L124 303" stroke="#ced4da"/>
+
+            <circle cx="760" cy="285" r="6"/>
+            <circle cx="760" cy="305" r="6"/>
+            <circle cx="800" cy="295" r="6"/>
+            <path d="M766 285 L794 295" stroke="#ced4da"/>
+            <path d="M766 305 L794 295" stroke="#ced4da"/>
+          </g>
+        </g>
+
+        <!-- arrows tiers ↔ substrate -->
+        <g>
+          <path d="M220 220 L220 258"/>
+          <path d="M215 253 L220 258 L225 253"/>
+          <path d="M660 220 L660 258"/>
+          <path d="M655 253 L660 258 L665 253"/>
+        </g>
+      </g>
+    </svg>
+    <p class="note-small" style="margin-top:6px;">Discovery feeds Projection (hypotheses tested at scale). Projection feeds Discovery (anomalies unpacked qualitatively). Both share the same substrate.</p>
+  </div>
+</section>
+
+<!-- 11 THREE PRODUCT LINES ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-spark"/></svg>Three product lines, staged</h1>
+  <h2>Foothold first; generality earned over time</h2>
+  <div class="body">
+    <div class="three-col">
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-target"/></svg>
+        <h3>1. Lift Triage</h3>
+        <p class="tag">foothold</p>
+        <ul>
+          <li>Brand Lift / copy test pre-flight</li>
+          <li>Sales Lift scenario triage</li>
+          <li>Audience-cell disaggregation without sample collapse</li>
+        </ul>
+      </div>
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-trend"/></svg>
+        <h3>2. Sentiment &amp; Virality</h3>
+        <p class="tag">sim-native</p>
+        <ul>
+          <li>Sentiment trajectory under campaign or event</li>
+          <li>Propagation coefficient by cohort</li>
+          <li>Response-strategy comparison</li>
+        </ul>
+      </div>
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-network"/></svg>
+        <h3>3. Cross-Domain Scenarios</h3>
+        <p class="tag">generality proof</p>
+        <ul>
+          <li>Category defection risk</li>
+          <li>Media fatigue susceptibility</li>
+          <li>Price-sensitivity shift</li>
+          <li>Vulnerability segmentation (later)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 WORKED EXAMPLE — OVERVIEW ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-question"/></svg>Worked example — overview</h1>
+  <h2>Two creative concepts on the same audience</h2>
+  <div class="body">
+    <div class="flow">
+      <div class="node"><svg class="icon"><use href="#ic-database"/></svg>Public dataset</div>
+      <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
+      <div class="node"><svg class="icon"><use href="#ic-people"/></svg>Synthetic agents</div>
+      <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
+      <div class="node"><svg class="icon"><use href="#ic-agent"/></svg>Two variant runs</div>
+      <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
+      <div class="node"><svg class="icon"><use href="#ic-scales"/></svg>Per-cell comparison</div>
+      <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
+      <div class="node"><svg class="icon"><use href="#ic-trend"/></svg>Heatmap</div>
+    </div>
+    <div class="two-col" style="margin-top:8px;">
+      <div>
+        <h3>Setup</h3>
+        <ul>
+          <li>Public dataset: Kaggle Marketing Campaign (~2,200 customers)</li>
+          <li>Subsampled to ~100 agents across 15 demographic cells</li>
+          <li>Two creative variants on the same product:
+            <ul style="margin-top:6px;">
+              <li><strong>Variant A:</strong> rational / value framing</li>
+              <li><strong>Variant B:</strong> lifestyle / aspiration framing</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h3>What the run produces</h3>
+        <ul>
+          <li>One agent card per persona</li>
+          <li>Per-agent action on each variant (Consume → Propagate)</li>
+          <li>Per-cell roll-up: Intent, Engagement, Themes, Clarity, Propagation</li>
+          <li>Comparison heatmap A vs B</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note-small">Illustration, not validation. The same approach extends to the production-grade substrate at scale.</p>
+  </div>
+</section>
+
+<!-- 13 WORKED EXAMPLE — AGENT CARD ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-agent"/></svg>Worked example — one agent</h1>
+  <h2>The unit of the simulation</h2>
+  <div class="body" style="flex-direction:row; gap:32px;">
+    <div style="flex: 1.3;">
+      <div class="placeholder" style="height: 100%; min-height: 440px;">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <use href="#ic-agent"/>
+        </svg>
+        <div class="label" style="margin-top:14px;">Agent card screenshot</div>
+        <div class="hint">Name, demographic attributes, propensities, voice register,<br>action menu, sampling profile, recorded behaviour</div>
+      </div>
+    </div>
+    <div style="flex: 1;">
+      <h3 style="margin-top:0;">Why this matters</h3>
+      <ul class="ic-list">
+        <li><svg class="icon ic"><use href="#ic-database"/></svg><span>Every attribute traces back to the graph substrate.</span></li>
+        <li><svg class="icon ic"><use href="#ic-target"/></svg><span>Action menu is shaped by propensity, not by LLM guesswork.</span></li>
+        <li><svg class="icon ic"><use href="#ic-spark"/></svg><span>Sampling profile (temperature, top-p) per agent.</span></li>
+        <li><svg class="icon ic"><use href="#ic-shield"/></svg><span>Engagement gate keeps off-register agents from being asked.</span></li>
+      </ul>
+      <div class="callout" style="font-size:13.5px;">Agents who would not engage are not asked. Realism by abstention, not by simulation.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 WORKED EXAMPLE — HEATMAP ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-scales"/></svg>Worked example — demographic response</h1>
+  <h2>Intent Index by cell · Variant A vs Variant B</h2>
+  <div class="body">
+    <div class="heatmap">
+      <div class="hcell hhead"></div>
+      <div class="hcell hhead">Low income</div>
+      <div class="hcell hhead">Mid income</div>
+      <div class="hcell hhead">High income</div>
+
+      <div class="hcell hrow">18&ndash;24</div>
+      <div class="hcell b-mid win-b">B +14<div class="delta">±5</div></div>
+      <div class="hcell b-hi  win-b">B +21<div class="delta">±4</div></div>
+      <div class="hcell b-hi  win-b">B +18<div class="delta">±5</div></div>
+
+      <div class="hcell hrow">25&ndash;34</div>
+      <div class="hcell b-lo  win-b">B +6<div class="delta">±6</div></div>
+      <div class="hcell b-mid win-b">B +11<div class="delta">±4</div></div>
+      <div class="hcell a-lo  win-a">A +4<div class="delta">±5</div></div>
+
+      <div class="hcell hrow">35&ndash;44</div>
+      <div class="hcell a-mid win-a">A +12<div class="delta">±5</div></div>
+      <div class="hcell a-mid win-a">A +9<div class="delta">±4</div></div>
+      <div class="hcell a-hi  win-a">A +16<div class="delta">±4</div></div>
+
+      <div class="hcell hrow">45&ndash;54</div>
+      <div class="hcell a-hi  win-a">A +18<div class="delta">±5</div></div>
+      <div class="hcell a-hi  win-a">A +17<div class="delta">±4</div></div>
+      <div class="hcell a-mid win-a">A +13<div class="delta">±5</div></div>
+
+      <div class="hcell hrow">55+</div>
+      <div class="hcell a-hi  win-a">A +22<div class="delta">±6</div></div>
+      <div class="hcell a-mid win-a">A +14<div class="delta">±5</div></div>
+      <div class="hcell a-lo  win-a">A +5<div class="delta">±6</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="background:#7cc59c;"></span>Variant A wins (rational / value)</span>
+      <span><span class="sw" style="background:#ed9b3e;"></span>Variant B wins (lifestyle / aspiration)</span>
+      <span class="note-small">Δ = Intent Index difference (0–100 scale), ±90% band</span>
+    </div>
+    <p class="note-small" style="margin-top:6px;">Illustrative — numbers shown are not from a calibrated run.</p>
+  </div>
+</section>
+
+<!-- 15 WORKED EXAMPLE — ROLL-UPS ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-trend"/></svg>Worked example — roll-ups</h1>
+  <h2>Aggregate read across the panel</h2>
+  <div class="body">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th class="right">Variant A</th>
+          <th class="right">Variant B</th>
+          <th class="right">Δ (A − B)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Aggregate Intent Index (0–100)</td><td class="right">68.4</td><td class="right">64.1</td><td class="right">+4.3</td></tr>
+        <tr><td>Engagement rate</td><td class="right">52%</td><td class="right">59%</td><td class="right">−7 pts</td></tr>
+        <tr><td>Clarity risk (cells flagged unclear)</td><td class="right">1 / 15</td><td class="right">3 / 15</td><td class="right">−2 cells</td></tr>
+        <tr><td>Propagation coefficient</td><td class="right">0.38</td><td class="right">0.51</td><td class="right">−0.13</td></tr>
+        <tr><td>Cells won</td><td class="right">9 / 15</td><td class="right">6 / 15</td><td class="right">—</td></tr>
+        <tr><td>Disagreement coefficient</td><td class="right" colspan="2">0.42 &nbsp; (segment-dependent)</td><td class="right">—</td></tr>
+      </tbody>
+    </table>
+    <h3>Top themes captured</h3>
+    <div class="two-col">
+      <div>
+        <p><strong>Variant A</strong></p>
+        <ul style="font-size:14px;"><li>trust · value · reliability · family budget</li></ul>
+      </div>
+      <div>
+        <p><strong>Variant B</strong></p>
+        <ul style="font-size:14px;"><li>aspiration · identity · novelty · share-worthy</li></ul>
+      </div>
+    </div>
+    <p class="note-small">A wins on intent and clarity; B wins on engagement and propagation. The decision is not which is "better" — it is which trade-off fits the brief.</p>
+  </div>
+</section>
+
+<!-- 16 RISKS ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-warning"/></svg>Risks &amp; unknowns</h1>
+  <h2>The non-believer section — the things we will be asked</h2>
+  <div class="body">
+    <ol style="columns:2; column-gap:48px; padding-left:24px;">
+      <li><strong>Consent &amp; second-use.</strong> Panel consent envelope may not cover agent projection. Legal review pending.</li>
+      <li><strong>Bias laundering.</strong> Subset selection can hardwire the answer. Mitigation: declared criteria + contrarian counterfactual subset.</li>
+      <li><strong>Cross-class transferability.</strong> Calibration on one signal does not transfer free to another.</li>
+      <li><strong>Regime change.</strong> Validated subsets decay. Library needs scheduled re-validation.</li>
+      <li><strong>Aggregate-only validity.</strong> Individual agents are not the product.</li>
+      <li><strong>Engine ceiling.</strong> Price/distribution-conditional purchase is not yet modelled cleanly.</li>
+      <li><strong>LLM drift.</strong> Model upgrades move numbers. Mitigated by cross-LLM robustness checks + frozen seeds + cache.</li>
+      <li><strong>Circularity.</strong> Panel both builds and validates. Mitigated by held-out validation slices.</li>
+      <li><strong>Demoware market risk.</strong> Saturated with "AI consumer" demos. Differentiation rests on the substrate.</li>
+      <li><strong>Commercial model.</strong> Per-study, per-scenario, per-decision pricing is unsettled.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- 17 FALSIFIABILITY ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-shield"/></svg>What would falsify this</h1>
+  <h2>A pre-committed exit criterion per decision class</h2>
+  <div class="body">
+    <p>For every calibrated decision class, we commit in advance to:</p>
+    <ul>
+      <li>A declared residual band — expected sim-vs-peg error</li>
+      <li>A declared coverage rate — % of calibration runs whose confidence band contains truth</li>
+      <li>A declared stability window — how long the residual can stay flat before re-validation</li>
+    </ul>
+    <p>If a class fails any of the three across a defined audit window, it is de-listed from the calibration matrix. Sims for that class are paused until reset.</p>
+    <div class="callout">The matrix shrinks as well as grows. That is the discipline that distinguishes this from demoware.</div>
+  </div>
+</section>
+
+<!-- 18 ROADMAP ------------------------------------------------ -->
+<section class="slide">
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-arrow-right"/></svg>Roadmap &amp; asks</h1>
+  <h2>What we build, in what order, with what we need</h2>
+  <div class="body">
+    <h3>Build</h3>
+    <table class="data">
+      <thead><tr><th>Phase</th><th>Capability</th><th>Calibration target</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Brand Lift triage MVP · creative pre-test</td><td>Brand Lift survey + BASES backtest</td></tr>
+        <tr><td>2</td><td>Sales Lift triage · MMM pre-flight</td><td>Homescan / loyalty backtest</td></tr>
+        <tr><td>3</td><td>Sentiment trajectory · cross-domain scenarios</td><td>Tracker + per-vertical pegs</td></tr>
+      </tbody>
+    </table>
+    <h3>Asks</h3>
+    <ul>
+      <li>Pilot scope and a sponsoring business unit</li>
+      <li>Access to retrospective Brand Lift / BASES data for the Phase 1 backtest</li>
+      <li>Legal review of agent projection vs the consent envelope</li>
+      <li>Engineering allocation for the projection-tier engine adapter</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 19 CLOSE ------------------------------------------------ -->
+<section class="slide title">
+  <h1>Questions &amp; pushback welcome</h1>
+  <h2>The deck is built to invite both.</h2>
+</section>
+
+</div>
+
+<div class="tpl-bar"></div>
+<div class="foot-left" id="foot-left">Confidential — internal draft v1</div>
+<div class="foot" id="foot"></div>
+
+<script>
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  const foot   = document.getElementById('foot');
+  let i = 0;
+  function render() {
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    foot.textContent = (i + 1) + ' / ' + slides.length;
+    document.body.classList.toggle('on-title', slides[i].classList.contains('title'));
+  }
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    render();
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp')                 { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home')                                            { go(0); }
+    else if (e.key === 'End')                                             { go(slides.length - 1); }
+  });
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('a, button, input, textarea, select')) return;
+    if (e.clientX > window.innerWidth / 2) go(i + 1); else go(i - 1);
+  });
+  render();
+})();
+</script>
+
+</body>
+</html>

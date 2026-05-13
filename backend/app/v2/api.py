@@ -277,6 +277,72 @@ def delete_study(study_id: str) -> Response:
     }})
 
 
+@v2_bp.route("/studies/<study_id>/details", methods=["GET"])
+def get_study_details(study_id: str) -> Response:
+    """Return the fully-loaded study as structured JSON for an in-browser viewer.
+
+    Reuses the loader to produce brief + panelist rows + edges + attributes
+    in a shape that's friendly for a UI inspector. Read-only.
+    """
+    record = next((s for s in _index_load() if s["study_id"] == study_id), None)
+    if record is None:
+        return jsonify({"success": False, "error": "unknown study_id"}), 404
+    p = Path(record["path"])
+    if p.is_dir():
+        p = p / "study.json"
+    if not p.exists():
+        return jsonify({"success": False,
+                         "error": f"file missing on disk: {p}"}), 404
+    try:
+        s = load_study(p)
+    except Exception as e:
+        return jsonify({"success": False,
+                         "error": f"failed to load: {e}"}), 400
+
+    brief = {
+        "content_id":      s.brief.content_id,
+        "title":           s.brief.title,
+        "genre":           s.brief.genre,
+        "slot":            s.brief.slot,
+        "channel":         s.brief.channel,
+        "runtime_minutes": s.brief.runtime_minutes,
+        "air_date":        s.brief.air_date,
+        "synopsis":        s.brief.synopsis,
+        "rules":           list(s.brief.rules),
+    }
+
+    nodes = []
+    for n in s.nodes:
+        nodes.append({
+            "label":      n.label,
+            "key_field":  n.key_field,
+            "key_value":  n.key_value,
+            "properties": dict(n.properties),
+            "attributes": dict(n.attributes),
+        })
+
+    edges_by_type: dict[str, list[dict]] = {}
+    for e in s.edges:
+        edges_by_type.setdefault(e.edge_type, []).append({
+            "source_key":   e.source_key_value,
+            "target_label": e.target_label,
+            "target_key":   e.target_key_value,
+            "properties":   dict(e.properties),
+        })
+
+    return jsonify({"success": True, "data": {
+        "study_id":       s.study_id,
+        "name":           s.name,
+        "description":    s.description,
+        "identity_label": s.identity_label,
+        "brief":          brief,
+        "nodes":          nodes,
+        "edges_by_type":  edges_by_type,
+        "engagement":     s.engagement or {},
+        "registered_at":  record.get("registered_at"),
+    }})
+
+
 @v2_bp.route("/studies/<study_id>/json", methods=["GET"])
 def download_study_json(study_id: str) -> Response:
     """Serve the raw study.json for a registered study as a download."""

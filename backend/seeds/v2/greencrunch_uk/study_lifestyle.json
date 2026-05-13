@@ -1,0 +1,101 @@
+{
+  "study_id": "greencrunch_uk_lifestyle_2026",
+  "name": "GreenCrunch UK — Variant B (lifestyle)",
+  "description": "30-panelist UK consumer panel. Same product as Variant A; this brief leads with lifestyle framing: energy, social moments, premium-but-affordable feel.",
+  "identity": {
+    "label": "Panelist",
+    "key": "panelist_id",
+    "csv": "panelists.csv",
+    "columns": [
+      { "name": "panelist_id",                "type": "string" },
+      { "name": "name",                       "type": "string" },
+      { "name": "age",                        "type": "int" },
+      { "name": "gender",                     "type": "string", "enum": ["F","M","X"] },
+      { "name": "region",                     "type": "string" },
+      { "name": "occupation",                 "type": "string" },
+      { "name": "household",                  "type": "string" },
+      { "name": "segment",                    "type": "string" },
+      { "name": "voice_register",             "type": "string" },
+      { "name": "rater_bias",                 "type": "float" },
+      { "name": "clarity_sensitivity",        "type": "string", "enum": ["low","medium","high"] },
+      { "name": "delayed_exposure_propensity","type": "float" },
+      { "name": "length_min_chars",           "type": "int" },
+      { "name": "length_max_chars",           "type": "int" },
+      { "name": "recorded_behaviour",         "type": "string" }
+    ]
+  },
+  "dimensions": [
+    {
+      "kind": "edge",
+      "name": "category_propensity",
+      "csv": "panelist_category_propensity.csv",
+      "join_on": "panelist_id",
+      "edge": "PROPENSITY_FOR_CATEGORY",
+      "target": { "label": "Category", "key": "category" },
+      "columns": [
+        { "name": "panelist_id", "type": "string" },
+        { "name": "category",    "type": "string" },
+        { "name": "propensity",  "type": "float" }
+      ]
+    },
+    {
+      "kind": "edge",
+      "name": "channel_propensity",
+      "csv": "panelist_channel_propensity.csv",
+      "join_on": "panelist_id",
+      "edge": "PROPENSITY_FOR_CHANNEL",
+      "target": { "label": "Channel", "key": "channel" },
+      "columns": [
+        { "name": "panelist_id", "type": "string" },
+        { "name": "channel",     "type": "string" },
+        { "name": "propensity",  "type": "float" }
+      ]
+    },
+    {
+      "kind": "attribute",
+      "name": "voice_examples",
+      "as": "voice_examples",
+      "csv": "panelist_voice_examples.csv",
+      "join_on": "panelist_id",
+      "columns": [
+        { "name": "panelist_id", "type": "string" },
+        { "name": "idx",         "type": "int" },
+        { "name": "example",     "type": "string" }
+      ]
+    },
+    {
+      "kind": "attribute",
+      "name": "vocabulary",
+      "as": "vocabulary",
+      "csv": "panelist_vocabulary.csv",
+      "join_on": "panelist_id",
+      "columns": [
+        { "name": "panelist_id", "type": "string" },
+        { "name": "polarity",    "type": "string", "enum": ["required","forbidden"] },
+        { "name": "term",        "type": "string" }
+      ]
+    }
+  ],
+  "brief": {
+    "content_id": "greencrunch_lifestyle_2026",
+    "title": "GreenCrunch — fuel for your moments",
+    "genre": "plant_based_snack",
+    "slot": "tv_primetime",
+    "channel": "TV + social + retail",
+    "runtime_minutes": 30,
+    "air_date": "2026-09-01",
+    "synopsis": "GreenCrunch is a new plant-based high-protein snack launching in UK supermarkets. The Variant B ad opens on a runner cresting a hill at sunrise — earbuds in, breathless. Quick cuts: a barre class winding down, a young couple sharing a bar over coffee, a builder mid-shift, a friend handing one over before a hike. Upbeat indie-pop track, warm grading, no nutrition facts shown. End frame: the bar wrapper in a hand, tagline 'Fuel your moments'. Soft hint of the price (£1.80) in the corner. Targeted at impulse moments, post-gym aisles, and on-the-go social occasions.",
+    "rules": [
+      "Strict raters stay strict, generous raters stay generous.",
+      "Every panelist reaction should be traceable to their recorded behaviour.",
+      "Use only the 30 named panelists. Do not invent additional panelists.",
+      "Do not invent product facts that aren't in the ad synopsis.",
+      "Stay in each panelist's voice register; respect their required and forbidden vocabulary."
+    ]
+  },
+  "engagement": {
+    "salience_threshold": 0.35,
+    "daily_action_cap": 6,
+    "embedding_model": "text-embedding-3-small"
+  }
+}

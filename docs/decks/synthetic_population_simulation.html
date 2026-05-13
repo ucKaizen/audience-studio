@@ -419,10 +419,10 @@ body.on-title .foot-left { display: none; }
 <!-- 01 TITLE ------------------------------------------------ -->
 <section class="slide active title">
   <h1>Audience Studio</h1>
-  <h2>A calibrated simulation layer on top of reach and ratings</h2>
+  <h2>A simulation layer on top of the reach and ratings data we already trust</h2>
   <svg class="hero-art" viewBox="0 0 620 90" width="620" height="90" xmlns="http://www.w3.org/2000/svg">
     <g fill="none" stroke="#adb5bd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-      <!-- graph nodes (substrate) -->
+      <!-- graph nodes (data) -->
       <g transform="translate(40,45)">
         <circle cx="0"  cy="-18" r="5" fill="#fff"/>
         <circle cx="-18" cy="10" r="5" fill="#fff"/>
@@ -432,7 +432,7 @@ body.on-title .foot-left { display: none; }
         <path d="M-14 7L-3 1"/>
         <path d="M14 7L3 1"/>
       </g>
-      <text x="40" y="80" text-anchor="middle" font-size="10" fill="#868e96" font-family="-apple-system,sans-serif">substrate</text>
+      <text x="40" y="80" text-anchor="middle" font-size="10" fill="#868e96" font-family="-apple-system,sans-serif">data</text>
 
       <!-- arrow 1 -->
       <path d="M90 45 L160 45"/>
@@ -594,26 +594,26 @@ body.on-title .foot-left { display: none; }
 
 <!-- 04 SUBSTRATE ------------------------------------------------ -->
 <section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-database"/></svg>Why us — the substrate</h1>
-  <h2>The only durable differentiator</h2>
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-database"/></svg>Why us &mdash; the data underneath</h1>
+  <h2>The one thing competitors can&rsquo;t copy</h2>
   <div class="body">
-    <p>Every "AI consumer" demo on the market today is built on LLM priors and web scrape — stereotyped composites of what a 25-year-old urban professional <em>might</em> be.</p>
-    <p>Ours is built on consented data with provenance:</p>
+    <p>Most &ldquo;AI consumer&rdquo; demos on the market today are built on what an LLM has picked up from the open web. They are stereotypes of what a 25-year-old urban professional <em>might</em> be.</p>
+    <p>Ours is built on real, consented data sources we already own:</p>
     <div class="sources">
       <div class="source">
         <svg class="icon icon-lg ic"><use href="#ic-panel"/></svg>
         <div class="lbl">Panel data</div>
-        <div class="note">purchase, viewership, longitudinal behaviour</div>
+        <div class="note">what people watch and buy, over time</div>
       </div>
       <div class="source">
         <svg class="icon icon-lg ic"><use href="#ic-survey"/></svg>
         <div class="lbl">Survey data</div>
-        <div class="note">attitudes, brand affinity, claimed behaviour</div>
+        <div class="note">what people think and say they do</div>
       </div>
       <div class="source">
         <svg class="icon icon-lg ic"><use href="#ic-product"/></svg>
         <div class="lbl">Ownership</div>
-        <div class="note">products owned, used, liked</div>
+        <div class="note">what people already own, use, like</div>
       </div>
       <div class="source">
         <svg class="icon icon-lg ic"><use href="#ic-heart"/></svg>
@@ -621,7 +621,7 @@ body.on-title .foot-left { display: none; }
         <div class="note">hobbies, lifestyle signals, affinities</div>
       </div>
     </div>
-    <div class="callout">Every node and every edge traces back to a consented panel read. That property cannot be replicated by anyone who does not own calibrated panel breadth.</div>
+    <div class="callout">Every node and every edge in our graph traces back to a real, consented panel read. Nobody without our panel data can build the same picture.</div>
   </div>
 </section>
 
@@ -636,7 +636,7 @@ body.on-title .foot-left { display: none; }
           <use href="#ic-graph"/>
         </svg>
         <div class="label" style="margin-top:14px;">Graph DB visualisation</div>
-        <div class="hint">A behavioural model with typed relationships<br>&mdash; every node and edge traces back to consented data</div>
+        <div class="hint">A connected picture of consumers<br>&mdash; every node and edge traces back to real, consented data</div>
       </div>
     </div>
     <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
@@ -648,8 +648,8 @@ body.on-title .foot-left { display: none; }
       </ul>
       <h3>Ingredient 2 &mdash; rules we control</h3>
       <ul class="ic-list">
-        <li><svg class="icon ic"><use href="#ic-target"/></svg><span>Engagement gate: declared rules for who reacts, when, and why</span></li>
-        <li><svg class="icon ic"><use href="#ic-scales"/></svg><span>Deterministic metrics &mdash; numbers we can trace, not LLM hallucination</span></li>
+        <li><svg class="icon ic"><use href="#ic-target"/></svg><span>Clear rules for who reacts to what, when, and why &mdash; declared up front</span></li>
+        <li><svg class="icon ic"><use href="#ic-scales"/></svg><span>Numbers we can trace back to the inputs &mdash; not made up by an LLM</span></li>
         <li><svg class="icon ic"><use href="#ic-spark"/></svg><span>Auditable trace &mdash; every decision logged with reason</span></li>
       </ul>
     </div>
@@ -753,21 +753,21 @@ body.on-title .foot-left { display: none; }
           </g>
         </g>
         <text x="730" y="200" text-anchor="middle" font-size="13" fill="#1a1a1a" font-weight="600" font-family="-apple-system,sans-serif">Library</text>
-        <text x="730" y="216" text-anchor="middle" font-size="11" fill="#868e96" font-family="-apple-system,sans-serif">indexed by decision class</text>
+        <text x="730" y="216" text-anchor="middle" font-size="11" fill="#868e96" font-family="-apple-system,sans-serif">grouped by question type</text>
       </g>
     </svg>
     <ul style="margin-top:8px;">
-      <li><strong>Census-scale pool</strong> projected deterministically from the substrate. Acts as a control, not a runtime universe.</li>
-      <li><strong>Synthetic-fit subset</strong> selected per question with declared criteria. A contrarian counterfactual subset runs alongside as a bias-laundering check.</li>
-      <li><strong>Library curation</strong> by retrospective fit on known-truth scenarios. Indexed by decision class. Re-validated on a cadence.</li>
+      <li><strong>Full population pool</strong> &mdash; every agent the data supports, kept as a control.</li>
+      <li><strong>The right subset for the question</strong> &mdash; pick agents relevant to the brief; criteria are declared up front so the answer can&rsquo;t be hand-picked. An opposite-shaped subset is run alongside as a sanity check.</li>
+      <li><strong>Reusable groups</strong> &mdash; once an agent group has answered known questions accurately, we keep that group as the go-to for similar questions. Refreshed regularly so they don&rsquo;t go stale.</li>
     </ul>
   </div>
 </section>
 
 <!-- 09 ACTION HIERARCHY ------------------------------------------------ -->
 <section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-funnel"/></svg>The action hierarchy</h1>
-  <h2>One grammar across media, commerce, virality, risk</h2>
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-funnel"/></svg>The journey from seeing to sharing</h1>
+  <h2>One model that fits media, brand, sales and word-of-mouth questions</h2>
   <div class="body">
     <div class="funnel">
       <div class="step">
@@ -801,133 +801,13 @@ body.on-title .foot-left { display: none; }
         <div class="note">share &amp; influence</div>
       </div>
     </div>
-    <h3>How it maps</h3>
+    <h3>How it maps to today&rsquo;s studies</h3>
     <ul>
-      <li>Copy test &amp; Brand Lift → <strong>Consume + Engage + Intent</strong></li>
-      <li>Sales Lift &amp; MMM pre-flight → <strong>Intent + Act</strong></li>
-      <li>Sentiment &amp; virality → <strong>Engage + Propagate</strong></li>
-      <li>Cross-domain risk → cohort-specific elevation across all five</li>
+      <li>Brand Lift answers <strong>Consume + Engage + Intent</strong></li>
+      <li>Sales Lift answers <strong>Intent + Act</strong></li>
+      <li>Social listening / word-of-mouth answers <strong>Engage + Propagate</strong></li>
+      <li>Each is a separate study today. We simulate all of them on one panel in one run.</li>
     </ul>
-  </div>
-</section>
-
-<!-- 10 TWO-TIER ENGINE ------------------------------------------------ -->
-<section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-layers"/></svg>Two-tier engine</h1>
-  <h2>One substrate. Two job-shapes.</h2>
-  <div class="body">
-    <svg viewBox="0 0 880 360" width="100%" style="max-width:1100px; max-height:380px;" xmlns="http://www.w3.org/2000/svg" aria-label="Two-tier engine">
-      <g fill="none" stroke="#495057" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" font-family="-apple-system,sans-serif">
-
-        <!-- DISCOVERY BOX -->
-        <g>
-          <rect x="40" y="20" width="360" height="200" rx="10" fill="#ffffff" stroke="#adb5bd"/>
-          <text x="60" y="48" font-size="14.5" font-weight="600" fill="#1a1a1a" stroke="none">Discovery tier</text>
-          <text x="60" y="66" font-size="11.5" fill="#868e96" stroke="none">conversation-rich · small N · qualitative</text>
-
-          <!-- 3 figures with speech bubbles -->
-          <g transform="translate(90,140)">
-            <circle cx="0" cy="-12" r="10" fill="#fff" stroke="#495057"/>
-            <path d="M-14 22c0-12 28-12 28 0"/>
-            <rect x="22" y="-26" width="80" height="22" rx="4" fill="#f8f9fa" stroke="#ced4da"/>
-            <path d="M22 -16 L16 -10 L22 -8" fill="#f8f9fa" stroke="#ced4da"/>
-            <path d="M30 -18 L96 -18" stroke="#adb5bd"/>
-            <path d="M30 -12 L72 -12" stroke="#adb5bd"/>
-          </g>
-          <g transform="translate(220,140)">
-            <circle cx="0" cy="-12" r="10" fill="#fff" stroke="#495057"/>
-            <path d="M-14 22c0-12 28-12 28 0"/>
-            <rect x="22" y="-26" width="80" height="22" rx="4" fill="#f8f9fa" stroke="#ced4da"/>
-            <path d="M22 -16 L16 -10 L22 -8" fill="#f8f9fa" stroke="#ced4da"/>
-            <path d="M30 -18 L96 -18" stroke="#adb5bd"/>
-            <path d="M30 -12 L68 -12" stroke="#adb5bd"/>
-          </g>
-        </g>
-
-        <!-- PROJECTION BOX -->
-        <g>
-          <rect x="480" y="20" width="360" height="200" rx="10" fill="#ffffff" stroke="#adb5bd"/>
-          <text x="500" y="48" font-size="14.5" font-weight="600" fill="#1a1a1a" stroke="none">Projection tier</text>
-          <text x="500" y="66" font-size="11.5" fill="#868e96" stroke="none">gated · deterministic · large N · quantitative</text>
-
-          <!-- agent grid 10 x 5 -->
-          <g fill="#495057" stroke="none">
-            <!-- row 1 -->
-            <circle cx="510" cy="100" r="3"/><circle cx="540" cy="100" r="3"/><circle cx="570" cy="100" r="3"/>
-            <circle cx="600" cy="100" r="3"/><circle cx="630" cy="100" r="3"/><circle cx="660" cy="100" r="3"/>
-            <circle cx="690" cy="100" r="3"/><circle cx="720" cy="100" r="3"/><circle cx="750" cy="100" r="3"/>
-            <circle cx="780" cy="100" r="3"/><circle cx="810" cy="100" r="3"/>
-            <!-- row 2 -->
-            <circle cx="510" cy="125" r="3"/><circle cx="540" cy="125" r="3"/><circle cx="570" cy="125" r="3"/>
-            <circle cx="600" cy="125" r="3"/><circle cx="630" cy="125" r="3"/><circle cx="660" cy="125" r="3"/>
-            <circle cx="690" cy="125" r="3"/><circle cx="720" cy="125" r="3"/><circle cx="750" cy="125" r="3"/>
-            <circle cx="780" cy="125" r="3"/><circle cx="810" cy="125" r="3"/>
-            <!-- row 3 -->
-            <circle cx="510" cy="150" r="3"/><circle cx="540" cy="150" r="3"/><circle cx="570" cy="150" r="3"/>
-            <circle cx="600" cy="150" r="3"/><circle cx="630" cy="150" r="3"/><circle cx="660" cy="150" r="3"/>
-            <circle cx="690" cy="150" r="3"/><circle cx="720" cy="150" r="3"/><circle cx="750" cy="150" r="3"/>
-            <circle cx="780" cy="150" r="3"/><circle cx="810" cy="150" r="3"/>
-            <!-- row 4 -->
-            <circle cx="510" cy="175" r="3"/><circle cx="540" cy="175" r="3"/><circle cx="570" cy="175" r="3"/>
-            <circle cx="600" cy="175" r="3"/><circle cx="630" cy="175" r="3"/><circle cx="660" cy="175" r="3"/>
-            <circle cx="690" cy="175" r="3"/><circle cx="720" cy="175" r="3"/><circle cx="750" cy="175" r="3"/>
-            <circle cx="780" cy="175" r="3"/><circle cx="810" cy="175" r="3"/>
-            <!-- row 5 (some gated out, lighter) -->
-          </g>
-          <g fill="#ced4da" stroke="none">
-            <circle cx="510" cy="200" r="3"/><circle cx="540" cy="200" r="3"/><circle cx="570" cy="200" r="3"/>
-            <circle cx="600" cy="200" r="3"/><circle cx="630" cy="200" r="3"/><circle cx="660" cy="200" r="3"/>
-            <circle cx="690" cy="200" r="3"/><circle cx="720" cy="200" r="3"/><circle cx="750" cy="200" r="3"/>
-            <circle cx="780" cy="200" r="3"/><circle cx="810" cy="200" r="3"/>
-          </g>
-          <text x="500" y="218" font-size="10.5" fill="#868e96" stroke="none">grey dots: gated out, zero tokens spent</text>
-        </g>
-
-        <!-- bidirectional arrows between tiers -->
-        <g>
-          <path d="M404 105 L476 105"/>
-          <path d="M409 100 L404 105 L409 110"/>
-          <path d="M471 110 L476 105 L471 100" stroke="#495057"/>
-          <text x="440" y="96" font-size="10.5" text-anchor="middle" fill="#6c757d" stroke="none">hypotheses</text>
-
-          <path d="M404 145 L476 145"/>
-          <path d="M409 140 L404 145 L409 150"/>
-          <path d="M471 150 L476 145 L471 140" stroke="#495057"/>
-          <text x="440" y="160" font-size="10.5" text-anchor="middle" fill="#6c757d" stroke="none">anomalies</text>
-        </g>
-
-        <!-- KG SUBSTRATE at bottom -->
-        <g>
-          <rect x="40" y="260" width="800" height="70" rx="10" fill="#f8f9fa" stroke="#adb5bd"/>
-          <text x="440" y="290" font-size="14" font-weight="600" fill="#1a1a1a" stroke="none" text-anchor="middle">Knowledge graph substrate</text>
-          <text x="440" y="310" font-size="11.5" fill="#6c757d" stroke="none" text-anchor="middle">panel · survey · ownership · interests · relationships</text>
-
-          <!-- mini nodes inside substrate -->
-          <g fill="#fff" stroke="#adb5bd">
-            <circle cx="90"  cy="295" r="6"/>
-            <circle cx="130" cy="285" r="6"/>
-            <circle cx="130" cy="305" r="6"/>
-            <path d="M96 295 L124 287" stroke="#ced4da"/>
-            <path d="M96 295 L124 303" stroke="#ced4da"/>
-
-            <circle cx="760" cy="285" r="6"/>
-            <circle cx="760" cy="305" r="6"/>
-            <circle cx="800" cy="295" r="6"/>
-            <path d="M766 285 L794 295" stroke="#ced4da"/>
-            <path d="M766 305 L794 295" stroke="#ced4da"/>
-          </g>
-        </g>
-
-        <!-- arrows tiers ↔ substrate -->
-        <g>
-          <path d="M220 220 L220 258"/>
-          <path d="M215 253 L220 258 L225 253"/>
-          <path d="M660 220 L660 258"/>
-          <path d="M655 253 L660 258 L665 253"/>
-        </g>
-      </g>
-    </svg>
-    <p class="note-small" style="margin-top:6px;">Discovery feeds Projection (hypotheses tested at scale). Projection feeds Discovery (anomalies unpacked qualitatively). Both share the same substrate.</p>
   </div>
 </section>
 
@@ -1006,7 +886,10 @@ body.on-title .foot-left { display: none; }
         <p style="font-size:14px; font-style:italic;">&ldquo;I lost the thread a bit with all the characters. Trust the story will unfold.&rdquo;</p>
       </div>
     </div>
-    <p class="note-small">Numbers and quotes from a real Audience Studio run on the BBC seed. Maps to BBC&rsquo;s Audience Index methodology &mdash; before broadcast.</p>
+    <div class="callout" style="margin-top:14px;">
+      <strong>What this tells us:</strong> the episode lands well with engaged drama viewers (Appreciation Index 72.6), but two of ten viewers won&rsquo;t turn up at all, and clarity is a real concern for older audiences. Decision before broadcast: launch as planned, but lean on iPlayer to recover the missing two and consider a short recap intro for clarity.
+    </div>
+    <p class="note-small">Numbers and quotes from a real run on the BBC seed. Maps to what the BBC&rsquo;s Audience Index measures &mdash; only available days before broadcast today.</p>
   </div>
 </section>
 
@@ -1052,33 +935,6 @@ body.on-title .foot-left { display: none; }
       </div>
     </div>
     <p class="note-small">One simulated run answers what panel + Brand Lift + Sales Lift normally need three separate studies to triangulate.</p>
-  </div>
-</section>
-
-<!-- 13 WORKED EXAMPLE — AGENT CARD ------------------------------------------------ -->
-<section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-agent"/></svg>The unit of simulation &mdash; one agent</h1>
-  <h2>Same shape across both prototypes &mdash; an agent is an agent</h2>
-  <div class="body" style="flex-direction:row; gap:32px;">
-    <div style="flex: 1.3;">
-      <div class="placeholder" style="height: 100%; min-height: 440px;">
-        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-          <use href="#ic-agent"/>
-        </svg>
-        <div class="label" style="margin-top:14px;">Agent card screenshot</div>
-        <div class="hint">Name, demographic attributes, propensities, voice register,<br>action menu, sampling profile, recorded behaviour</div>
-      </div>
-    </div>
-    <div style="flex: 1;">
-      <h3 style="margin-top:0;">Why this matters</h3>
-      <ul class="ic-list">
-        <li><svg class="icon ic"><use href="#ic-database"/></svg><span>Every attribute traces back to the graph substrate.</span></li>
-        <li><svg class="icon ic"><use href="#ic-target"/></svg><span>Action menu is shaped by propensity, not by LLM guesswork.</span></li>
-        <li><svg class="icon ic"><use href="#ic-spark"/></svg><span>Sampling profile (temperature, top-p) per agent.</span></li>
-        <li><svg class="icon ic"><use href="#ic-shield"/></svg><span>Engagement gate keeps off-register agents from being asked.</span></li>
-      </ul>
-      <div class="callout" style="font-size:13.5px;">Agents who would not engage are not asked. Realism by abstention, not by simulation.</div>
-    </div>
   </div>
 </section>
 
@@ -1175,61 +1031,54 @@ body.on-title .foot-left { display: none; }
 
 <!-- 16 RISKS ------------------------------------------------ -->
 <section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-warning"/></svg>Risks &amp; unknowns</h1>
-  <h2>The non-believer section — the things we will be asked</h2>
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-warning"/></svg>Risks and unknowns</h1>
+  <h2>The questions we expect to be asked in this room &mdash; with our honest answers</h2>
   <div class="body">
     <ol style="columns:2; column-gap:48px; padding-left:24px;">
-      <li><strong>Consent &amp; second-use.</strong> Panel consent envelope may not cover agent projection. Legal review pending.</li>
-      <li><strong>Bias laundering.</strong> Subset selection can hardwire the answer. Mitigation: declared criteria + contrarian counterfactual subset.</li>
-      <li><strong>Cross-class transferability.</strong> Calibration on one signal does not transfer free to another.</li>
-      <li><strong>Regime change.</strong> Validated subsets decay. Library needs scheduled re-validation.</li>
-      <li><strong>Aggregate-only validity.</strong> Individual agents are not the product.</li>
-      <li><strong>Engine ceiling.</strong> Price/distribution-conditional purchase is not yet modelled cleanly.</li>
-      <li><strong>LLM drift.</strong> Model upgrades move numbers. Mitigated by cross-LLM robustness checks + frozen seeds + cache.</li>
-      <li><strong>Circularity.</strong> Panel both builds and validates. Mitigated by held-out validation slices.</li>
-      <li><strong>Demoware market risk.</strong> Saturated with "AI consumer" demos. Differentiation rests on the substrate.</li>
-      <li><strong>Commercial model.</strong> Per-study, per-scenario, per-decision pricing is unsettled.</li>
+      <li><strong>Consent and second-use.</strong> Panel consent may not cover building agents from the data. Legal review needed before any commercial use.</li>
+      <li><strong>Cherry-picking risk.</strong> Choosing the right subset of agents could pre-decide the answer. We declare the criteria up front and run an opposite-shaped group alongside as a sanity check.</li>
+      <li><strong>Doesn&rsquo;t transfer for free.</strong> Trust earned on one type of question doesn&rsquo;t carry over to a different type &mdash; each needs its own validation.</li>
+      <li><strong>Things change.</strong> What worked last year may not work this year. Agent groups need refreshing on a regular schedule.</li>
+      <li><strong>Group answers only.</strong> We claim accuracy for the population averages, not for any single agent.</li>
+      <li><strong>What it can&rsquo;t do yet.</strong> Price, shelf placement, distribution &mdash; these aren&rsquo;t modelled. Today it&rsquo;s strong on creative reception, not on commercial conditions.</li>
+      <li><strong>Model drift.</strong> When the underlying LLM is upgraded the numbers can shift. We test across model versions and freeze inputs to minimise this.</li>
+      <li><strong>Same data builds and judges it.</strong> The panel is used to build the agents and to validate them. We keep some panel data aside so it never trains on what it&rsquo;s tested against.</li>
+      <li><strong>Crowded market.</strong> Lots of &ldquo;AI consumer&rdquo; demos out there. What sets us apart is the data underneath, not the engine.</li>
+      <li><strong>Pricing model.</strong> Per-study, per-question, per-decision &mdash; we don&rsquo;t know yet what buyers will accept.</li>
     </ol>
-  </div>
-</section>
-
-<!-- 17 FALSIFIABILITY ------------------------------------------------ -->
-<section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-shield"/></svg>What would falsify this</h1>
-  <h2>A pre-committed exit criterion per decision class</h2>
-  <div class="body">
-    <p>For every calibrated decision class, we commit in advance to:</p>
-    <ul>
-      <li>A declared residual band — expected sim-vs-peg error</li>
-      <li>A declared coverage rate — % of calibration runs whose confidence band contains truth</li>
-      <li>A declared stability window — how long the residual can stay flat before re-validation</li>
-    </ul>
-    <p>If a class fails any of the three across a defined audit window, it is de-listed from the calibration matrix. Sims for that class are paused until reset.</p>
-    <div class="callout">The matrix shrinks as well as grows. That is the discipline that distinguishes this from demoware.</div>
   </div>
 </section>
 
 <!-- 18 ROADMAP ------------------------------------------------ -->
 <section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-arrow-right"/></svg>Roadmap &amp; asks</h1>
-  <h2>What we build, in what order, with what we need</h2>
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-arrow-right"/></svg>What we need next</h1>
+  <h2>Two things have to validate together &mdash; the technology, and the commercial fit</h2>
   <div class="body">
-    <h3>Build</h3>
-    <table class="data">
-      <thead><tr><th>Phase</th><th>Capability</th><th>Calibration target</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td>Brand Lift triage MVP · creative pre-test</td><td>Brand Lift survey + BASES backtest</td></tr>
-        <tr><td>2</td><td>Sales Lift triage · MMM pre-flight</td><td>Homescan / loyalty backtest</td></tr>
-        <tr><td>3</td><td>Sentiment trajectory · cross-domain scenarios</td><td>Tracker + per-vertical pegs</td></tr>
-      </tbody>
-    </table>
-    <h3>Asks</h3>
-    <ul>
-      <li>Pilot scope and a sponsoring business unit</li>
-      <li>Access to retrospective Brand Lift / BASES data for the Phase 1 backtest</li>
-      <li>Legal review of agent projection vs the consent envelope</li>
-      <li>Engineering allocation for the projection-tier engine adapter</li>
-    </ul>
+    <div class="two-col">
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-scales"/></svg>
+        <h3>Technology validation</h3>
+        <p class="tag">does it work?</p>
+        <ul>
+          <li>Run on a known case &mdash; compare against a real Brand Lift or Sales Lift result</li>
+          <li>Repeat for a second case in a different category</li>
+          <li>Publish the gap between simulated and measured numbers</li>
+        </ul>
+      </div>
+      <div class="card">
+        <svg class="icon icon-lg card-ic"><use href="#ic-target"/></svg>
+        <h3>Commercial validation</h3>
+        <p class="tag">does anyone want it?</p>
+        <ul>
+          <li>A sponsoring business unit prepared to put one real question through it</li>
+          <li>A client willing to share a real brief in exchange for the read</li>
+          <li>A pricing point that a buyer agrees to before we build further</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:18px;">
+      The commercial side is the harder of the two. Building it is well understood; <strong>selling it depends on finding the buyer who values the speed enough to back it</strong>.
+    </div>
   </div>
 </section>
 

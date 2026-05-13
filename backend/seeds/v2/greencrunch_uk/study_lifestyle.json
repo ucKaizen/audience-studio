@@ -30,8 +30,8 @@
       "name": "category_propensity",
       "csv": "panelist_category_propensity.csv",
       "join_on": "panelist_id",
-      "edge": "PROPENSITY_FOR_CATEGORY",
-      "target": { "label": "Category", "key": "category" },
+      "edge": "PROPENSITY_FOR_GENRE",
+      "target": { "label": "Genre", "key": "category" },
       "columns": [
         { "name": "panelist_id", "type": "string" },
         { "name": "category",    "type": "string" },
@@ -43,8 +43,8 @@
       "name": "channel_propensity",
       "csv": "panelist_channel_propensity.csv",
       "join_on": "panelist_id",
-      "edge": "PROPENSITY_FOR_CHANNEL",
-      "target": { "label": "Channel", "key": "channel" },
+      "edge": "PROPENSITY_FOR_SLOT",
+      "target": { "label": "Slot", "key": "channel" },
       "columns": [
         { "name": "panelist_id", "type": "string" },
         { "name": "channel",     "type": "string" },
@@ -79,7 +79,7 @@
   "brief": {
     "content_id": "greencrunch_lifestyle_2026",
     "title": "GreenCrunch — fuel for your moments",
-    "genre": "plant_based_snack",
+    "genre": "plant_based",
     "slot": "tv_primetime",
     "channel": "TV + social + retail",
     "runtime_minutes": 30,

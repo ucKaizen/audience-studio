@@ -177,8 +177,12 @@ def _infer_clarity(text: str, persona: Persona) -> str:
     return "clear"
 
 
-# Mapping from textual cues to the canonical six themes used by BBC AI.
+# Mapping from textual cues to canonical themes.
+# Themes are union of BBC-style media themes (used by the BBC seed) and
+# product/FMCG themes (used by the GreenCrunch and similar product seeds).
+# Both fire independently — a single piece of text can match either set.
 _THEME_CUES: dict[str, tuple[str, ...]] = {
+    # ---- media / programme themes (BBC seed) ----
     "informative":          ("informative", "factual", "learned", "taught", "facts"),
     "reflected_uk_life":    ("uk life", "britain", "british", "country", "community", "place"),
     "representative":       ("representative", "represented", "diverse", "ethnic", "communities"),
@@ -187,6 +191,24 @@ _THEME_CUES: dict[str, tuple[str, ...]] = {
                              "nuance", "nuanced", "politically", "political"),
     "emotionally_engaging": ("moving", "emotional", "touching", "gripping",
                              "powerful", "tense", "violent", "dark"),
+    # ---- product / FMCG themes (GreenCrunch and similar) ----
+    "value_for_money":      ("value", "fair price", "decent price", "good price", "£1.80",
+                             "budget", "cheap", "expensive", "daft", "steep",
+                             "weekly shop", "multipack", "offer", "worth"),
+    "health_oriented":      ("protein", "healthy", "clean ingredients", "macros", "nutrition",
+                             "no added sugar", "real food", "real ingredients", "plant-based",
+                             "plant protein", "calories", "label"),
+    "convenient_quick":     ("quick snack", "on the go", "on-the-go", "grab", "shift",
+                             "site", "station", "lunchbox", "quick"),
+    "lifestyle_aesthetic":  ("vibes", "lifestyle", "warm grading", "social", "gym",
+                             "post-gym", "moments", "fuel", "perfect for"),
+    "premium_quality":      ("quality", "premium", "real ingredients", "texture",
+                             "tastes", "executed", "considered", "well made"),
+    "sceptical_marketing":  ("marketing on a wrapper", "another snack", "another bar", "claim",
+                             "evidence", "fad", "verify", "honest", "marketing claim",
+                             "looks like every"),
+    "trusted_familiar":     ("trusted", "trust", "familiar", "m&s", "marks's", "tesco",
+                             "always carry", "stick with"),
 }
 
 
@@ -199,11 +221,24 @@ def _infer_themes(text: str, persona: Persona) -> tuple[str, ...]:
     if not tags:
         # Soft fallback: grab the top genre's theme proxy.
         top = max(persona.genre_propensity.items(),
-                  key=lambda kv: kv[1], default=(None, 0))
-        if top[0] == "political_drama":
+                  key=lambda kv: kv[1], default=(None, 0))[0]
+        # media / programme genres
+        if top == "political_drama":
             tags.append("thought_provoking")
-        elif top[0] in ("documentary", "news"):
+        elif top in ("documentary", "news"):
             tags.append("informative")
+        # product / FMCG categories (treated as "genres" by the loader)
+        elif top in ("healthy_snacks", "protein_focused", "plant_based",
+                       "low_calorie"):
+            tags.append("health_oriented")
+        elif top in ("convenience_food", "on_the_go"):
+            tags.append("convenient_quick")
+        elif top == "premium_food":
+            tags.append("premium_quality")
+        elif top == "budget_food":
+            tags.append("value_for_money")
+        elif top in ("indulgent_snacks", "traditional_snacks"):
+            tags.append("trusted_familiar")
     return tuple(tags[:3])
 
 
@@ -235,12 +270,24 @@ def _anchor_score(persona: Persona, watched: str, *, clarity: str = "clear",
 def _default_themes(persona: Persona) -> tuple[str, ...]:
     top = max(persona.genre_propensity.items(),
               key=lambda kv: kv[1], default=(None, 0))[0]
+    # media / programme genres
     if top == "political_drama":
         return ("thought_provoking",)
     if top in ("documentary", "news"):
         return ("informative",)
     if top == "panel_show":
         return ("emotionally_engaging",)
+    # product / FMCG categories (treated as "genres" by the loader)
+    if top in ("healthy_snacks", "protein_focused", "plant_based", "low_calorie"):
+        return ("health_oriented",)
+    if top in ("convenience_food", "on_the_go"):
+        return ("convenient_quick",)
+    if top == "premium_food":
+        return ("premium_quality",)
+    if top == "budget_food":
+        return ("value_for_money",)
+    if top in ("indulgent_snacks", "traditional_snacks"):
+        return ("trusted_familiar",)
     return ()
 
 

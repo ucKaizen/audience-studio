@@ -130,10 +130,16 @@
               <span class="universe-eyebrow">Universe</span>
               The behavioural model behind <code>{{ selectedStudyId }}</code>
             </h3>
-            <button v-if="!graphLoading && (!graphData || graphMissing)"
+            <button v-if="!graphLoading"
                     class="ghost primary"
                     @click="onBuildGraph">
-              {{ buildingGraph ? 'Building…' : (graphMissing ? 'Build graph' : 'Load graph') }}
+              {{ buildingGraph
+                ? 'Building…'
+                : graphMissing
+                  ? 'Build graph'
+                  : graphData
+                    ? 'Rebuild graph'
+                    : 'Load graph' }}
             </button>
           </div>
 

@@ -56,22 +56,32 @@ class GraphWriter:
         ``graph_id`` is stamped onto every node/edge as ``graph_id`` so a single
         Neo4j instance can host multiple studies side by side. ``wipe=True``
         deletes any existing nodes/edges with the same graph_id before writing.
+
+        Beyond the schema-declared dimensions, this also derives behavioural
+        nodes from panelist properties (region, household, voice register,
+        clarity sensitivity, gender, age band) so the graph reads as a
+        connected behavioural model rather than a flat star-schema.
         """
         gid = graph_id or f"v2_{study.study_id}"
         if wipe:
             self._wipe(gid)
+
+        extra_targets, extra_edges = _derive_implicit_dimensions(study)
+        all_target_nodes = {**study.target_nodes, **extra_targets}
+        all_edges = list(study.edges) + extra_edges
+
         self._write_identity_nodes(study.nodes, gid)
-        self._write_target_nodes(study.target_nodes, gid)
-        edge_types = self._write_edges(study.edges, gid)
+        self._write_target_nodes(all_target_nodes, gid)
+        edge_types = self._write_edges(all_edges, gid)
         self._stamp_brief(study, gid)
         return WriteStats(
             study_id=study.study_id,
             graph_id=gid,
             identity_nodes=len(study.nodes),
-            target_nodes=len(study.target_nodes),
-            edges=len(study.edges),
+            target_nodes=len(all_target_nodes),
+            edges=len(all_edges),
             edge_types=edge_types,
-            target_labels=_count_labels(study.target_nodes),
+            target_labels=_count_labels(all_target_nodes),
         )
 
     def count_for(self, graph_id: str) -> dict[str, int]:
@@ -209,3 +219,79 @@ def _count_labels(target_nodes: dict[tuple[str, str], Any]) -> dict[str, int]:
     for (label, _), _ in target_nodes.items():
         counts[label] += 1
     return dict(counts)
+
+
+# ---------- derived dimensions ----------
+
+# These derive nodes from panelist properties so the graph reads as a
+# behavioural model — panelists who share a region / household type / voice
+# register / clarity sensitivity / gender / age band become visibly
+# connected rather than sitting as flat row attributes.
+_DERIVED_DIMENSIONS = [
+    {"prop": "region",              "label": "Region",             "edge": "LIVES_IN"},
+    {"prop": "household",           "label": "HouseholdType",      "edge": "HOUSEHOLD_IS"},
+    {"prop": "voice_register",      "label": "VoiceRegister",      "edge": "SPEAKS_IN"},
+    {"prop": "clarity_sensitivity", "label": "ClaritySensitivity", "edge": "CLARITY_LEVEL"},
+    {"prop": "gender",              "label": "Gender",             "edge": "IDENTIFIES_AS"},
+]
+
+
+def _age_band(age: Any) -> str | None:
+    try:
+        a = int(age)
+    except (TypeError, ValueError):
+        return None
+    if a < 18: return "<18"
+    if a < 25: return "18-24"
+    if a < 35: return "25-34"
+    if a < 45: return "35-44"
+    if a < 55: return "45-54"
+    if a < 65: return "55-64"
+    return "65+"
+
+
+def _derive_implicit_dimensions(
+    study: Study,
+) -> tuple[dict[tuple[str, str], dict[str, Any]], list[DimensionEdge]]:
+    """Build extra target nodes + edges from panelist properties."""
+    extra_targets: dict[tuple[str, str], dict[str, Any]] = {}
+    extra_edges: list[DimensionEdge] = []
+
+    for node in study.nodes:
+        # Simple string-valued dimensions
+        for dim in _DERIVED_DIMENSIONS:
+            raw = node.properties.get(dim["prop"])
+            if raw is None or raw == "":
+                continue
+            value = str(raw).strip()
+            if not value:
+                continue
+            label = dim["label"]
+            extra_targets[(label, value)] = {"name": value}
+            extra_edges.append(DimensionEdge(
+                edge_type=dim["edge"],
+                source_label=node.label,
+                source_key_field=node.key_field,
+                source_key_value=node.key_value,
+                target_label=label,
+                target_key_field="value",
+                target_key_value=value,
+                properties={},
+            ))
+
+        # Age band (derived from age int)
+        band = _age_band(node.properties.get("age"))
+        if band:
+            extra_targets[("AgeBand", band)] = {"name": band}
+            extra_edges.append(DimensionEdge(
+                edge_type="AGE_BAND",
+                source_label=node.label,
+                source_key_field=node.key_field,
+                source_key_value=node.key_value,
+                target_label="AgeBand",
+                target_key_field="value",
+                target_key_value=band,
+                properties={},
+            ))
+
+    return extra_targets, extra_edges

@@ -33,6 +33,10 @@ export function getStudyDetails(study_id) {
   return service({ url: `/api/v2/studies/${encodeURIComponent(study_id)}/details`, method: 'get' })
 }
 
+export function buildStudyGraph(study_id) {
+  return service({ url: `/api/v2/studies/${encodeURIComponent(study_id)}/build-graph`, method: 'post' })
+}
+
 export function startRun({ study_id, rounds = 2, skip_neo4j = false, no_llm_narrator = false }) {
   return service({
     url: '/api/v2/runs',

@@ -95,6 +95,40 @@ def version() -> Response:
     })
 
 
+# ---------- graph write helper ----------
+
+def _maybe_write_graph(study: Any, study_id: str) -> dict[str, Any] | None:
+    """Best-effort write of a study's typed graph to Neo4j.
+
+    Used at registration / upload time so the graph is browsable before any
+    simulation runs. Logs but never raises — if Neo4j is unreachable the
+    registration still succeeds, the graph view just stays empty until the
+    user runs the study or hits the explicit build-graph endpoint.
+    """
+    try:
+        uri      = os.environ.get("NEO4J_URI",      "bolt://localhost:7687")
+        user     = os.environ.get("NEO4J_USER",     "neo4j")
+        password = os.environ.get("NEO4J_PASSWORD", "mirofish-local-password")
+        gw = GraphWriter(uri, user, password)
+        try:
+            stats = gw.write_study(study, graph_id=f"v2_{study_id}")
+            return {
+                "graph_id":       stats.graph_id,
+                "identity_nodes": stats.identity_nodes,
+                "target_nodes":   stats.target_nodes,
+                "edges":          stats.edges,
+                "target_labels":  stats.target_labels,
+                "edge_types":     stats.edge_types,
+            }
+        finally:
+            gw.close()
+    except Exception as e:
+        logger.warning("graph write failed for %s: %s "
+                       "(graph view will be empty until run or rebuild)",
+                       study_id, e)
+        return None
+
+
 # ---------- in-process state ----------
 
 _runs_lock = threading.Lock()
@@ -125,6 +159,7 @@ def register_study_from_disk() -> Response:
     except Exception as e:
         return jsonify({"success": False, "error": f"failed to load: {e}"}), 400
 
+    graph_stats = _maybe_write_graph(s, s.study_id)
     record = {
         "study_id":    s.study_id,
         "name":        s.name,
@@ -138,9 +173,10 @@ def register_study_from_disk() -> Response:
             "air_date":   s.brief.air_date,
         },
         "registered_at": _iso_now(),
+        "graph_built":   graph_stats is not None,
     }
     _index_put(record)
-    return jsonify({"success": True, "data": record})
+    return jsonify({"success": True, "data": {**record, "graph": graph_stats}})
 
 
 @v2_bp.route("/studies", methods=["GET"])
@@ -218,6 +254,7 @@ def upload_study() -> Response:
             n += 1
         registered_id = f"{s.study_id}__{n}"
 
+    graph_stats = _maybe_write_graph(s, registered_id)
     record = {
         "study_id":    registered_id,
         "name":        s.name,
@@ -231,9 +268,10 @@ def upload_study() -> Response:
             "air_date":   s.brief.air_date,
         },
         "registered_at": _iso_now(),
+        "graph_built":   graph_stats is not None,
     }
     _index_put(record)
-    return jsonify({"success": True, "data": record})
+    return jsonify({"success": True, "data": {**record, "graph": graph_stats}})
 
 
 @v2_bp.route("/studies/<study_id>", methods=["DELETE"])
@@ -275,6 +313,37 @@ def delete_study(study_id: str) -> Response:
         "study_id":     study_id,
         "removed_files": removed_files,
     }})
+
+
+@v2_bp.route("/studies/<study_id>/build-graph", methods=["POST"])
+def build_study_graph(study_id: str) -> Response:
+    """Force-write the typed graph for a registered study into Neo4j.
+
+    Used to populate the graph for studies registered before graph
+    write-at-register was added, or to refresh after schema changes.
+    """
+    record = next((s for s in _index_load() if s["study_id"] == study_id), None)
+    if record is None:
+        return jsonify({"success": False, "error": "unknown study_id"}), 404
+    p = Path(record["path"])
+    if p.is_dir():
+        p = p / "study.json"
+    if not p.exists():
+        return jsonify({"success": False,
+                         "error": f"file missing on disk: {p}"}), 404
+    try:
+        s = load_study(p)
+    except Exception as e:
+        return jsonify({"success": False,
+                         "error": f"failed to load: {e}"}), 400
+    stats = _maybe_write_graph(s, study_id)
+    if stats is None:
+        return jsonify({"success": False, "error": "Neo4j unreachable"}), 502
+
+    # Mark the index entry as having a graph
+    record["graph_built"] = True
+    _index_put(record)
+    return jsonify({"success": True, "data": stats})
 
 
 @v2_bp.route("/studies/<study_id>/details", methods=["GET"])

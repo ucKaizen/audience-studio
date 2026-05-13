@@ -1041,44 +1041,45 @@ body.on-title .foot-left { display: none; }
 <!-- 12 WORKED EXAMPLE — OVERVIEW ------------------------------------------------ -->
 <section class="slide">
   <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-question"/></svg>Worked example — overview</h1>
-  <h2>Two creative concepts on the same audience</h2>
+  <h2>Product launch demo: end-to-end funnel on a synthetic UK panel</h2>
   <div class="body">
     <div class="flow">
-      <div class="node"><svg class="icon"><use href="#ic-database"/></svg>Public dataset</div>
+      <div class="node"><svg class="icon"><use href="#ic-people"/></svg>30-panelist UK seed</div>
       <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
-      <div class="node"><svg class="icon"><use href="#ic-people"/></svg>Synthetic agents</div>
+      <div class="node"><svg class="icon"><use href="#ic-agent"/></svg>Synthetic agents</div>
       <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
-      <div class="node"><svg class="icon"><use href="#ic-agent"/></svg>Two variant runs</div>
+      <div class="node"><svg class="icon"><use href="#ic-spark"/></svg>Two creative runs</div>
       <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
-      <div class="node"><svg class="icon"><use href="#ic-scales"/></svg>Per-cell comparison</div>
+      <div class="node"><svg class="icon"><use href="#ic-funnel"/></svg>Funnel per cell</div>
       <svg class="icon arr"><use href="#ic-arrow-right"/></svg>
-      <div class="node"><svg class="icon"><use href="#ic-trend"/></svg>Heatmap</div>
+      <div class="node"><svg class="icon"><use href="#ic-trend"/></svg>Heatmap + roll-up</div>
     </div>
     <div class="two-col" style="margin-top:8px;">
       <div>
         <h3>Setup</h3>
         <ul>
-          <li>Public dataset: Kaggle Marketing Campaign (~2,200 customers)</li>
-          <li>Subsampled to ~100 agents across 15 demographic cells</li>
-          <li>Two creative variants on the same product:
+          <li><strong>Product:</strong> GreenCrunch &mdash; new plant-based high-protein snack, launching in UK supermarkets</li>
+          <li><strong>Panel:</strong> 30 hand-authored UK consumers across 15 demographic cells (age &times; segment)</li>
+          <li><strong>Two creative variants on the same product:</strong>
             <ul style="margin-top:6px;">
-              <li><strong>Variant A:</strong> rational / value framing</li>
-              <li><strong>Variant B:</strong> lifestyle / aspiration framing</li>
+              <li><strong>Variant A:</strong> rational &mdash; protein, calories, clean ingredients</li>
+              <li><strong>Variant B:</strong> lifestyle &mdash; energy, social moments, premium-feel</li>
             </ul>
           </li>
         </ul>
       </div>
       <div>
-        <h3>What the run produces</h3>
+        <h3>What we simulate end-to-end</h3>
         <ul>
-          <li>One agent card per persona</li>
-          <li>Per-agent action on each variant (Consume → Propagate)</li>
-          <li>Per-cell roll-up: Intent, Engagement, Themes, Clarity, Propagation</li>
-          <li>Comparison heatmap A vs B</li>
+          <li><strong>Consume</strong> &mdash; did they see the ad?</li>
+          <li><strong>Engage</strong> &mdash; did they pay attention?</li>
+          <li><strong>Intent</strong> &mdash; would they consider buying?</li>
+          <li><strong>Act</strong> &mdash; would they purchase at the stated price?</li>
+          <li><strong>Propagate</strong> &mdash; would they share or recommend?</li>
         </ul>
       </div>
     </div>
-    <p class="note-small">Illustration, not validation. The same approach extends to the production-grade substrate at scale.</p>
+    <p class="note-small">One simulated run answers what panel + Brand Lift + Sales Lift normally need three separate studies to triangulate.</p>
   </div>
 </section>
 
@@ -1111,84 +1112,92 @@ body.on-title .foot-left { display: none; }
 
 <!-- 14 WORKED EXAMPLE — HEATMAP ------------------------------------------------ -->
 <section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-scales"/></svg>Worked example — demographic response</h1>
-  <h2>Intent Index by cell · Variant A vs Variant B</h2>
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-scales"/></svg>Worked example &mdash; demographic response</h1>
+  <h2>Purchase Intent by cell · Variant A (rational) vs Variant B (lifestyle)</h2>
   <div class="body">
     <div class="heatmap">
       <div class="hcell hhead"></div>
-      <div class="hcell hhead">Low income</div>
-      <div class="hcell hhead">Mid income</div>
-      <div class="hcell hhead">High income</div>
+      <div class="hcell hhead">Health-focused</div>
+      <div class="hcell hhead">Value-conscious</div>
+      <div class="hcell hhead">Convenience-driven</div>
 
       <div class="hcell hrow">18&ndash;24</div>
-      <div class="hcell b-mid win-b">B +14<div class="delta">±5</div></div>
-      <div class="hcell b-hi  win-b">B +21<div class="delta">±4</div></div>
-      <div class="hcell b-hi  win-b">B +18<div class="delta">±5</div></div>
+      <div class="hcell a-lo  win-a">A +6<div class="delta">±5</div></div>
+      <div class="hcell b-mid win-b">B +12<div class="delta">±5</div></div>
+      <div class="hcell b-hi  win-b">B +18<div class="delta">±4</div></div>
 
       <div class="hcell hrow">25&ndash;34</div>
-      <div class="hcell b-lo  win-b">B +6<div class="delta">±6</div></div>
-      <div class="hcell b-mid win-b">B +11<div class="delta">±4</div></div>
-      <div class="hcell a-lo  win-a">A +4<div class="delta">±5</div></div>
+      <div class="hcell a-hi  win-a">A +16<div class="delta">±4</div></div>
+      <div class="hcell b-lo  win-b">B +4<div class="delta">±6</div></div>
+      <div class="hcell b-mid win-b">B +14<div class="delta">±5</div></div>
 
       <div class="hcell hrow">35&ndash;44</div>
-      <div class="hcell a-mid win-a">A +12<div class="delta">±5</div></div>
-      <div class="hcell a-mid win-a">A +9<div class="delta">±4</div></div>
-      <div class="hcell a-hi  win-a">A +16<div class="delta">±4</div></div>
+      <div class="hcell a-hi  win-a">A +18<div class="delta">±4</div></div>
+      <div class="hcell a-mid win-a">A +6<div class="delta">±5</div></div>
+      <div class="hcell a-lo  win-a">A +4<div class="delta">±5</div></div>
 
       <div class="hcell hrow">45&ndash;54</div>
-      <div class="hcell a-hi  win-a">A +18<div class="delta">±5</div></div>
-      <div class="hcell a-hi  win-a">A +17<div class="delta">±4</div></div>
-      <div class="hcell a-mid win-a">A +13<div class="delta">±5</div></div>
+      <div class="hcell a-mid win-a">A +14<div class="delta">±5</div></div>
+      <div class="hcell a-mid win-a">A +12<div class="delta">±4</div></div>
+      <div class="hcell a-mid win-a">A +10<div class="delta">±5</div></div>
 
       <div class="hcell hrow">55+</div>
-      <div class="hcell a-hi  win-a">A +22<div class="delta">±6</div></div>
-      <div class="hcell a-mid win-a">A +14<div class="delta">±5</div></div>
-      <div class="hcell a-lo  win-a">A +5<div class="delta">±6</div></div>
+      <div class="hcell a-mid win-a">A +10<div class="delta">±5</div></div>
+      <div class="hcell a-hi  win-a">A +16<div class="delta">±5</div></div>
+      <div class="hcell a-mid win-a">A +6<div class="delta">±6</div></div>
     </div>
     <div class="legend">
-      <span><span class="sw" style="background:#7cc59c;"></span>Variant A wins (rational / value)</span>
-      <span><span class="sw" style="background:#ed9b3e;"></span>Variant B wins (lifestyle / aspiration)</span>
-      <span class="note-small">Δ = Intent Index difference (0–100 scale), ±90% band</span>
+      <span><span class="sw" style="background:#7cc59c;"></span>Variant A wins (rational &mdash; protein, calories, ingredients)</span>
+      <span><span class="sw" style="background:#ed9b3e;"></span>Variant B wins (lifestyle &mdash; energy, social, premium)</span>
+      <span class="note-small">Δ = Purchase Intent difference (0–100 scale), ±90% band</span>
     </div>
-    <p class="note-small" style="margin-top:6px;">Illustrative — numbers shown are not from a calibrated run.</p>
+    <p class="note-small" style="margin-top:6px;">
+      Illustrative numbers from a stylised run. Story shape: rational framing dominates with health-focused
+      and older segments where the rational message matches motivation; lifestyle framing wins with younger
+      convenience-driven and value-conscious where social cues drive purchase.
+    </p>
   </div>
 </section>
 
-<!-- 15 WORKED EXAMPLE — ROLL-UPS ------------------------------------------------ -->
+<!-- 15 WORKED EXAMPLE — FUNNEL ROLL-UP ------------------------------------------------ -->
 <section class="slide">
-  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-trend"/></svg>Worked example — roll-ups</h1>
-  <h2>Aggregate read across the panel</h2>
+  <h1><svg class="icon icon-lg" style="color:#495057"><use href="#ic-funnel"/></svg>Worked example &mdash; the full funnel</h1>
+  <h2>One simulated run = Brand Lift + Sales Lift + Advocacy in one read</h2>
   <div class="body">
     <table class="data">
       <thead>
         <tr>
-          <th>Metric</th>
+          <th>Funnel step</th>
+          <th>Maps to today&rsquo;s study</th>
           <th class="right">Variant A</th>
           <th class="right">Variant B</th>
           <th class="right">Δ (A − B)</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>Aggregate Intent Index (0–100)</td><td class="right">68.4</td><td class="right">64.1</td><td class="right">+4.3</td></tr>
-        <tr><td>Engagement rate</td><td class="right">52%</td><td class="right">59%</td><td class="right">−7 pts</td></tr>
-        <tr><td>Clarity risk (cells flagged unclear)</td><td class="right">1 / 15</td><td class="right">3 / 15</td><td class="right">−2 cells</td></tr>
-        <tr><td>Propagation coefficient</td><td class="right">0.38</td><td class="right">0.51</td><td class="right">−0.13</td></tr>
-        <tr><td>Cells won</td><td class="right">9 / 15</td><td class="right">6 / 15</td><td class="right">—</td></tr>
-        <tr><td>Disagreement coefficient</td><td class="right" colspan="2">0.42 &nbsp; (segment-dependent)</td><td class="right">—</td></tr>
+        <tr><td><strong>Consume</strong> &mdash; saw the ad</td><td class="muted">Reach</td><td class="right">87%</td><td class="right">91%</td><td class="right">−4 pts</td></tr>
+        <tr><td><strong>Engage</strong> &mdash; paid attention</td><td class="muted">Brand Lift (attention)</td><td class="right">52%</td><td class="right">64%</td><td class="right">−12 pts</td></tr>
+        <tr><td><strong>Intent</strong> &mdash; would consider</td><td class="muted">Brand Lift (intent)</td><td class="right">38%</td><td class="right">41%</td><td class="right">−3 pts</td></tr>
+        <tr><td><strong>Act</strong> &mdash; would purchase at price</td><td class="muted">Sales Lift</td><td class="right"><strong>22%</strong></td><td class="right">18%</td><td class="right"><strong>+4 pts</strong></td></tr>
+        <tr><td><strong>Propagate</strong> &mdash; would share / recommend</td><td class="muted">Advocacy / NPS</td><td class="right">9%</td><td class="right">17%</td><td class="right">−8 pts</td></tr>
       </tbody>
     </table>
-    <h3>Top themes captured</h3>
-    <div class="two-col">
-      <div>
-        <p><strong>Variant A</strong></p>
-        <ul style="font-size:14px;"><li>trust · value · reliability · family budget</li></ul>
-      </div>
-      <div>
-        <p><strong>Variant B</strong></p>
-        <ul style="font-size:14px;"><li>aspiration · identity · novelty · share-worthy</li></ul>
-      </div>
+    <div class="callout" style="margin-top:14px;">
+      Brand Lift would tell you <strong>B wins</strong>. Sales Lift would tell you <strong>A wins</strong>. Audience Studio shows you both, on the same panel, before either study is commissioned.
     </div>
-    <p class="note-small">A wins on intent and clarity; B wins on engagement and propagation. The decision is not which is "better" — it is which trade-off fits the brief.</p>
+
+    <h3 style="margin-top:18px;">What this simulation does <em>not</em> account for</h3>
+    <p class="muted small" style="margin-top:-4px;">Honest disclosure on what&rsquo;s out of scope for this illustrative demo:</p>
+    <ul style="margin-top:4px;">
+      <li><strong>Price elasticity</strong> &mdash; would normally come from a price-test or conjoint study</li>
+      <li><strong>Promotion &amp; shelf effects</strong> &mdash; depth of discount, end-cap placement, share-of-shelf</li>
+      <li><strong>Competitive context</strong> &mdash; what competing products do at the same moment</li>
+      <li><strong>Distribution &amp; availability</strong> &mdash; assumes homogeneous availability across the panel</li>
+      <li><strong>Media exposure modelling</strong> &mdash; assumes the ad is seen; doesn&rsquo;t simulate media plan or reach build</li>
+    </ul>
+    <p class="note-small">
+      These are the engine&rsquo;s declared ceilings, captured on the Risks &amp; Unknowns slide. The funnel above models <em>persona reception of the creative</em> &mdash; the engine&rsquo;s strongest capability. Closing each of these gaps is on the roadmap.
+    </p>
   </div>
 </section>
 

@@ -911,9 +911,15 @@ table.grid td.action-cell { display: flex; gap: 10px; align-items: center; }
 
 .graph-flex { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
 .graph-svg {
-  display: block; background: #f8fafc;
-  border: 1px solid #e5e7eb; border-radius: 8px;
-  flex: 1 1 600px; height: 540px;
+  display: block;
+  background-color: #f8fafc;
+  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1.2px);
+  background-size: 18px 18px;
+  background-position: 0 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  flex: 1 1 600px;
+  height: 540px;
 }
 .graph-svg text { user-select: none; pointer-events: none; }
 .node-panel {

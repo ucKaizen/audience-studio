@@ -30,7 +30,7 @@
         <span class="stage-num">1</span>
         <div>
           <h2 class="stage-title">Load</h2>
-          <p class="stage-sub">Upload a study bundle or register one from disk. Inspect the contents before running.</p>
+          <p class="stage-sub">Upload or register a study, then browse its universe before running.</p>
         </div>
       </div>
       <div class="stage-body">
@@ -122,6 +122,78 @@
           </tbody>
         </table>
         <p v-else class="muted">No studies registered yet.</p>
+
+        <!-- Universe — graph of the selected study -->
+        <div v-if="selectedStudyId" class="universe">
+          <div class="universe-head">
+            <h3 class="sub-h">
+              <span class="universe-eyebrow">Universe</span>
+              The behavioural model behind <code>{{ selectedStudyId }}</code>
+            </h3>
+            <button v-if="!graphLoading && (!graphData || graphMissing)"
+                    class="ghost primary"
+                    @click="onBuildGraph">
+              {{ buildingGraph ? 'Building…' : (graphMissing ? 'Build graph' : 'Load graph') }}
+            </button>
+          </div>
+
+          <p v-if="graphLoading" class="muted small">Loading graph…</p>
+          <p v-if="graphMissing && !buildingGraph && !graphData" class="muted small">
+            No graph in Neo4j for this study yet. Click <strong>Build graph</strong> above to materialise it,
+            or it will be written automatically the next time you run.
+          </p>
+          <p v-if="graphError" class="error">{{ graphError }}</p>
+
+          <template v-if="graphData && graphData.nodes && graphData.nodes.length">
+            <p class="muted small">
+              {{ graphData.node_count }} nodes, {{ graphData.edge_count }} edges across
+              {{ legendLabels.length }} node types. Drag to rearrange · click a node to inspect.
+            </p>
+            <div class="graph-legend">
+              <span v-for="lbl in legendLabels" :key="lbl"
+                    class="legend-pill" :data-lbl="lbl"
+                    :style="legendStyle(lbl)">{{ lbl }}</span>
+            </div>
+            <div class="graph-flex">
+              <svg ref="graphSvg" class="graph-svg" :width="graphWidth" :height="graphHeight"></svg>
+              <aside class="node-panel">
+                <div v-if="!selectedNode" class="muted small">
+                  Click any node to inspect its attributes and edges.
+                </div>
+                <div v-else>
+                  <div class="node-head">
+                    <span class="legend-pill"
+                          :data-lbl="selectedNode.label"
+                          :style="legendStyle(selectedNode.label)">{{ selectedNode.label }}</span>
+                    <code>{{ selectedNode.key }}</code>
+                  </div>
+                  <h4 v-if="selectedNode.props && (selectedNode.props.name || selectedNode.props.title)">
+                    {{ selectedNode.props.name || selectedNode.props.title }}
+                  </h4>
+                  <table class="props">
+                    <tbody>
+                      <tr v-for="(v, k) in flatProps(selectedNode.props)" :key="k">
+                        <th>{{ k }}</th>
+                        <td><pre>{{ v }}</pre></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <h5 v-if="selectedEdges.length">Edges ({{ selectedEdges.length }})</h5>
+                  <ul class="edge-list">
+                    <li v-for="(e, i) in selectedEdges" :key="i">
+                      <code>{{ e.dir }}</code>
+                      <span class="etype">{{ e.type }}</span>
+                      <code>{{ e.otherLabel }}:{{ e.otherKey }}</code>
+                      <span v-if="e.props && Object.keys(e.props).length" class="muted small">
+                        {{ JSON.stringify(e.props) }}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </aside>
+            </div>
+          </template>
+        </div>
       </div>
     </section>
 
@@ -190,7 +262,7 @@
         <span class="stage-num">3</span>
         <div>
           <h2 class="stage-title">Results</h2>
-          <p class="stage-sub">Headline metrics, the typed graph, and the narrative report.</p>
+          <p class="stage-sub">Headline metrics and the narrative report. Universe view is up in Stage 1.</p>
         </div>
       </div>
       <div class="stage-body">
@@ -205,61 +277,9 @@
           <span><strong>clarity risk</strong> {{ activeRun.headline.clarity_risk }}/{{ activeRun.headline.panel_size }}</span>
         </div>
 
-        <div v-if="graphData" class="graph-wrap">
-          <h3 class="sub-h">Graph</h3>
-          <p class="muted small">
-            Typed graph that the loader wrote into Neo4j for this study.
-            {{ graphData.node_count }} nodes, {{ graphData.edge_count }} edges.
-            Click any node to see its full attributes.
-          </p>
-          <div class="graph-legend">
-            <span class="legend-pill" data-lbl="Panelist">Panelist</span>
-            <span class="legend-pill" data-lbl="Genre">Genre</span>
-            <span class="legend-pill" data-lbl="Slot">Slot</span>
-            <span class="legend-pill" data-lbl="Brief">Brief</span>
-          </div>
-          <div class="graph-flex">
-            <svg ref="graphSvg" class="graph-svg" :width="graphWidth" :height="graphHeight"></svg>
-            <aside class="node-panel">
-              <div v-if="!selectedNode" class="muted small">
-                Click a node to inspect.
-              </div>
-              <div v-else>
-                <div class="node-head">
-                  <span class="legend-pill" :data-lbl="selectedNode.label">{{ selectedNode.label }}</span>
-                  <code>{{ selectedNode.key }}</code>
-                </div>
-                <h4 v-if="selectedNode.props && (selectedNode.props.name || selectedNode.props.title)">
-                  {{ selectedNode.props.name || selectedNode.props.title }}
-                </h4>
-                <table class="props">
-                  <tbody>
-                    <tr v-for="(v, k) in flatProps(selectedNode.props)" :key="k">
-                      <th>{{ k }}</th>
-                      <td><pre>{{ v }}</pre></td>
-                    </tr>
-                  </tbody>
-                </table>
-                <h5 v-if="selectedEdges.length">Edges ({{ selectedEdges.length }})</h5>
-                <ul class="edge-list">
-                  <li v-for="(e, i) in selectedEdges" :key="i">
-                    <code>{{ e.dir }}</code>
-                    <span class="etype">{{ e.type }}</span>
-                    <code>{{ e.otherLabel }}:{{ e.otherKey }}</code>
-                    <span v-if="e.props && Object.keys(e.props).length" class="muted small">
-                      {{ JSON.stringify(e.props) }}
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </aside>
-          </div>
-          <p v-if="graphError" class="error">{{ graphError }}</p>
-        </div>
-
-        <div v-if="reportMarkdown" class="report-wrap">
+        <div v-if="reportHtml" class="report-wrap">
           <h3 class="sub-h">Report</h3>
-          <pre class="report">{{ reportMarkdown }}</pre>
+          <div class="report-html" v-html="reportHtml"></div>
         </div>
       </div>
     </section>
@@ -273,9 +293,11 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import * as d3 from 'd3'
+import { marked } from 'marked'
 import {
+  buildStudyGraph,
   deleteStudy,
   getGraph,
   getRun,
@@ -307,9 +329,12 @@ const activeRun = ref(null)
 const reportMarkdown = ref('')
 const graphData = ref(null)
 const graphError = ref('')
+const graphLoading = ref(false)
+const graphMissing = ref(false)
+const buildingGraph = ref(false)
 const graphSvg = ref(null)
-const graphWidth = 620
-const graphHeight = 520
+const graphWidth = 720
+const graphHeight = 540
 const selectedNode = ref(null)
 let pollHandle = null
 let simulation = null
@@ -325,10 +350,62 @@ const stageSimEl  = ref(null)
 const stageResEl  = ref(null)
 let stageObserver = null
 
+// ---------- node label palette ----------
+const LABEL_COLOR = {
+  Panelist:           '#2563eb',
+  Genre:              '#65a30d',
+  Slot:               '#b45309',
+  Brief:              '#be185d',
+  Region:             '#0d9488',
+  HouseholdType:      '#7c3aed',
+  VoiceRegister:      '#e11d48',
+  ClaritySensitivity: '#0891b2',
+  Gender:             '#475569',
+  AgeBand:            '#ea580c'
+}
+const LABEL_RADIUS = {
+  Brief:              14,
+  Panelist:           12,
+  Region:             9,
+  HouseholdType:      9,
+  Genre:              8,
+  Slot:               8,
+  VoiceRegister:      8,
+  ClaritySensitivity: 8,
+  Gender:             8,
+  AgeBand:            8
+}
+
+const legendLabels = computed(() => {
+  if (!graphData.value?.nodes) return []
+  const set = new Set()
+  for (const n of graphData.value.nodes) set.add(n.label)
+  // Stable ordering
+  const order = ['Panelist','Region','HouseholdType','VoiceRegister','ClaritySensitivity','Gender','AgeBand','Genre','Slot','Brief']
+  return order.filter(l => set.has(l)).concat([...set].filter(l => !order.includes(l)))
+})
+
+function legendStyle(label) {
+  const c = LABEL_COLOR[label]
+  return c ? { '--lbl-color': c } : {}
+}
+
+// ---------- computed ----------
 const logText = computed(() => (activeRun.value?.log || []).join('\n'))
 const selectedStudy = computed(() =>
   studies.value.find(s => s.study_id === selectedStudyId.value) || null
 )
+const reportHtml = computed(() => {
+  if (!reportMarkdown.value) return ''
+  try {
+    return marked.parse(reportMarkdown.value, { gfm: true, breaks: false })
+  } catch {
+    return `<pre>${escapeHtml(reportMarkdown.value)}</pre>`
+  }
+})
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
 
 const selectedEdges = computed(() => {
   if (!selectedNode.value || !graphData.value) return []
@@ -453,8 +530,6 @@ async function kickOffRun() {
   runError.value = ''
   running.value = true
   reportMarkdown.value = ''
-  selectedNode.value = null
-  graphData.value = null
   try {
     const res = await startRun({
       study_id: selectedStudyId.value,
@@ -483,6 +558,7 @@ async function pollUntilDone() {
         running.value = false
         const md = await getRunReportMarkdown(id)
         reportMarkdown.value = md
+        // Refresh graph after run in case it was newly written
         await loadAndRenderGraph(activeRun.value.study_id)
       } else if (activeRun.value.status === 'failed') {
         clearInterval(pollHandle)
@@ -497,21 +573,46 @@ async function pollUntilDone() {
 }
 
 async function loadAndRenderGraph(study_id) {
+  if (!study_id) return
   graphError.value = ''
+  graphMissing.value = false
   graphData.value = null
   selectedNode.value = null
-  if (skipNeo4j.value) return
+  graphLoading.value = true
   try {
     const graph_id = `v2_${study_id}`
     const res = await getGraph(graph_id)
-    graphData.value = res.data
+    const data = res.data
+    if (!data || !data.nodes || data.nodes.length === 0) {
+      graphMissing.value = true
+      graphData.value = null
+      return
+    }
+    graphData.value = data
     await nextTick()
-    renderGraph(res.data)
+    renderGraph(data)
   } catch (err) {
     graphError.value =
       'Could not load graph from Neo4j. ' +
-      'On Railway, this happens when the graphdb service is offline. ' +
-      'The run, metrics, and report above are unaffected.'
+      'On Railway, this happens when the graphdb service is offline.'
+  } finally {
+    graphLoading.value = false
+  }
+}
+
+async function onBuildGraph() {
+  if (!selectedStudyId.value) return
+  graphError.value = ''
+  buildingGraph.value = true
+  try {
+    await buildStudyGraph(selectedStudyId.value)
+    await loadAndRenderGraph(selectedStudyId.value)
+  } catch (err) {
+    graphError.value =
+      'Build graph failed: ' +
+      String(err?.response?.data?.error || err?.message || err)
+  } finally {
+    buildingGraph.value = false
   }
 }
 
@@ -537,34 +638,21 @@ function renderGraph(data) {
     name: (n.props && (n.props.name || n.props.title)) || n.key
   }))
 
-  const labelColor = {
-    Panelist: '#2563eb',
-    Genre:    '#65a30d',
-    Slot:     '#b45309',
-    Brief:    '#be185d'
-  }
-  const labelRadius = {
-    Panelist: 12,
-    Genre:    9,
-    Slot:     9,
-    Brief:    14
-  }
-
   simulation = d3.forceSimulation(nodes)
     .force('link', d3.forceLink(links).id(d => d.id)
-      .distance(d => 60 + (1 - (d.propensity || 0.5)) * 80)
-      .strength(d => 0.2 + (d.propensity || 0.5) * 0.6))
-    .force('charge', d3.forceManyBody().strength(-220))
+      .distance(d => 55 + (1 - (d.propensity || 0.5)) * 70)
+      .strength(d => 0.2 + (d.propensity || 0.5) * 0.55))
+    .force('charge', d3.forceManyBody().strength(-260))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collide', d3.forceCollide().radius(d => (labelRadius[d.label] || 10) + 4))
+    .force('collide', d3.forceCollide().radius(d => (LABEL_RADIUS[d.label] || 9) + 5))
 
   const link = svg.append('g')
     .attr('stroke', '#cbd5e1')
     .selectAll('line')
     .data(links)
     .enter().append('line')
-    .attr('stroke-width', d => 0.5 + (d.propensity || 0.5) * 2.5)
-    .attr('stroke-opacity', d => 0.25 + (d.propensity || 0.5) * 0.55)
+    .attr('stroke-width', d => 0.5 + (d.propensity || 0.5) * 2.0)
+    .attr('stroke-opacity', d => 0.22 + (d.propensity || 0.5) * 0.5)
 
   const node = svg.append('g')
     .selectAll('g')
@@ -589,8 +677,8 @@ function renderGraph(data) {
       }))
 
   node.append('circle')
-    .attr('r', d => labelRadius[d.label] || 8)
-    .attr('fill', d => labelColor[d.label] || '#6b7280')
+    .attr('r', d => LABEL_RADIUS[d.label] || 8)
+    .attr('fill', d => LABEL_COLOR[d.label] || '#6b7280')
     .attr('stroke', '#fff')
     .attr('stroke-width', 1.5)
 
@@ -598,8 +686,10 @@ function renderGraph(data) {
     .text(d => `${d.label}: ${d.name}`)
 
   node.append('text')
-    .text(d => d.label === 'Panelist' ? d.name.split(' ')[0] : d.key)
-    .attr('x', d => (labelRadius[d.label] || 8) + 4)
+    .text(d => d.label === 'Panelist'
+      ? d.name.split(' ')[0]
+      : (d.key || '').toString().replace(/_/g, ' '))
+    .attr('x', d => (LABEL_RADIUS[d.label] || 8) + 4)
     .attr('y', 4)
     .attr('font-size', 11)
     .attr('fill', '#1f2937')
@@ -619,7 +709,6 @@ function setupStageObserver() {
     [stageResEl.value,  'res']
   ])
   stageObserver = new IntersectionObserver((entries) => {
-    // pick the one most in view
     let best = null
     for (const e of entries) {
       if (!e.isIntersecting) continue
@@ -634,6 +723,17 @@ function setupStageObserver() {
     if (el) stageObserver.observe(el)
   }
 }
+
+// Reactively load the graph when the user picks a study (or after a run).
+watch(selectedStudyId, async (id) => {
+  if (!id) {
+    graphData.value = null
+    graphError.value = ''
+    graphMissing.value = false
+    return
+  }
+  await loadAndRenderGraph(id)
+})
 
 onMounted(async () => {
   await refreshStudies()
@@ -787,6 +887,69 @@ table.grid td.action-cell { display: flex; gap: 10px; align-items: center; }
 .link { color: #2c5282; font-size: 13px; text-decoration: none; }
 .link:hover { text-decoration: underline; }
 
+/* ===== universe (graph) ===== */
+.universe { margin-top: 24px; }
+.universe-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 6px; flex-wrap: wrap;
+}
+.universe-eyebrow {
+  display: inline-block;
+  font-size: 11px; color: #7c3aed; background: #f3e8ff;
+  padding: 2px 8px; border-radius: 4px;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.sub-h { margin: 8px 0 8px; font-size: 16px; font-weight: 600; }
+
+.graph-flex { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
+.graph-svg {
+  display: block; background: #f8fafc;
+  border: 1px solid #e5e7eb; border-radius: 8px;
+  flex: 1 1 600px; height: 540px;
+}
+.graph-svg text { user-select: none; pointer-events: none; }
+.node-panel {
+  flex: 1 1 320px; max-width: 420px;
+  border: 1px solid #e5e7eb; border-radius: 8px;
+  padding: 12px; background: #ffffff;
+  overflow: auto; max-height: 540px;
+  font-size: 13px;
+}
+.node-panel h4 { margin: 6px 0 8px; font-size: 15px; }
+.node-panel h5 { margin: 12px 0 6px; font-size: 13px; color: #374151; }
+.node-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+table.props { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.props th {
+  text-align: left; vertical-align: top; padding: 4px 8px 4px 0;
+  color: #6b7280; font-weight: 500; width: 35%;
+}
+table.props td { padding: 4px 0; }
+table.props pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.edge-list { padding-left: 0; list-style: none; margin: 4px 0 0; }
+.edge-list li {
+  padding: 3px 0; border-bottom: 1px dashed #f1f5f9;
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+.edge-list .etype { font-size: 11px; color: #64748b; }
+
+.graph-legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+.legend-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 10px; border-radius: 9999px; font-size: 12px;
+  background: #f3f4f6; color: #1f2937;
+}
+.legend-pill::before {
+  content: ""; width: 9px; height: 9px; border-radius: 50%;
+  display: inline-block; background: var(--lbl-color, #6b7280);
+}
+
 /* ===== stage 2 — run ===== */
 .selected-bar {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -822,70 +985,53 @@ pre.log {
   font-size: 14px; border: 1px solid #bbf7d0;
 }
 
-.sub-h { margin: 18px 0 8px; font-size: 15px; font-weight: 600; }
-
-.graph-wrap { margin-top: 12px; }
-.graph-flex { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
-.graph-svg {
-  display: block; background: #f8fafc;
-  border: 1px solid #e5e7eb; border-radius: 8px;
-  flex: 1 1 560px; height: 520px;
-}
-.graph-svg text { user-select: none; pointer-events: none; }
-.node-panel {
-  flex: 1 1 320px; max-width: 420px;
-  border: 1px solid #e5e7eb; border-radius: 8px;
-  padding: 12px; background: #ffffff;
-  overflow: auto; max-height: 520px;
-  font-size: 13px;
-}
-.node-panel h4 { margin: 6px 0 8px; font-size: 15px; }
-.node-panel h5 { margin: 12px 0 6px; font-size: 13px; color: #374151; }
-.node-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-table.props { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-table.props th {
-  text-align: left; vertical-align: top; padding: 4px 8px 4px 0;
-  color: #6b7280; font-weight: 500; width: 35%;
-}
-table.props td { padding: 4px 0; }
-table.props pre {
-  margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-  white-space: pre-wrap; word-break: break-word;
-}
-.edge-list { padding-left: 0; list-style: none; margin: 4px 0 0; }
-.edge-list li {
-  padding: 3px 0; border-bottom: 1px dashed #f1f5f9;
-  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
-}
-.edge-list .etype { font-size: 11px; color: #64748b; }
-
-.graph-legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
-.legend-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 2px 10px; border-radius: 9999px; font-size: 12px;
-  background: #f3f4f6; color: #1f2937;
-}
-.legend-pill::before {
-  content: ""; width: 9px; height: 9px; border-radius: 50%;
-  display: inline-block; background: #6b7280;
-}
-.legend-pill[data-lbl="Panelist"]::before { background: #2563eb; }
-.legend-pill[data-lbl="Genre"]::before    { background: #65a30d; }
-.legend-pill[data-lbl="Slot"]::before     { background: #b45309; }
-.legend-pill[data-lbl="Brief"]::before    { background: #be185d; }
-
 .report-wrap { margin-top: 18px; }
-pre.report {
+.report-html {
   background: #f8fafc; color: #1f2937;
-  padding: 14px; border-radius: 8px;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-               "Liberation Mono", "Courier New", monospace;
-  font-size: 12.5px; line-height: 1.55;
-  white-space: pre;
-  overflow: auto;
+  padding: 18px 22px; border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px; line-height: 1.65;
   max-height: 720px;
-  border: 1px solid #e2e8f0; margin: 0;
+  overflow: auto;
+}
+.report-html :deep(h1),
+.report-html :deep(h2),
+.report-html :deep(h3),
+.report-html :deep(h4) { margin: 16px 0 8px; line-height: 1.3; }
+.report-html :deep(h1) { font-size: 20px; }
+.report-html :deep(h2) { font-size: 17px; }
+.report-html :deep(h3) { font-size: 15px; }
+.report-html :deep(h4) { font-size: 14px; color: #475569; }
+.report-html :deep(p)  { margin: 8px 0; }
+.report-html :deep(ul),
+.report-html :deep(ol) { margin: 6px 0 8px 22px; }
+.report-html :deep(li) { margin-bottom: 3px; }
+.report-html :deep(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px; background: #eef2f7; padding: 1px 5px; border-radius: 4px;
+}
+.report-html :deep(strong) { color: #1f2937; }
+.report-html :deep(blockquote) {
+  border-left: 3px solid #cbd5e1; padding: 6px 12px;
+  margin: 8px 0; background: #ffffff;
+  color: #475569; font-style: italic;
+}
+.report-html :deep(table) {
+  border-collapse: collapse; margin: 10px 0 14px;
+  font-size: 13px; width: 100%;
+}
+.report-html :deep(thead) { background: #ffffff; }
+.report-html :deep(th) {
+  text-align: left; padding: 8px 10px;
+  border-bottom: 1.5px solid #cbd5e1;
+  font-weight: 600; color: #334155;
+}
+.report-html :deep(td) {
+  padding: 7px 10px; border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+.report-html :deep(tr:nth-child(even) td) { background: rgba(255,255,255,0.5); }
+.report-html :deep(hr) {
+  border: 0; border-top: 1px solid #e2e8f0; margin: 14px 0;
 }
 </style>

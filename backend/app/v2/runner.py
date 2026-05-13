@@ -263,8 +263,10 @@ class MiniRunner:
 
         if round_idx == 1:
             user_prompt = (
-                f"You just watched the following content. Produce ONE social-"
-                f"media reaction. Pick exactly ONE action from this menu:\n"
+                f"You just saw the following content (it may be a TV "
+                f"programme, an advertisement, an event, or another kind of "
+                f"brief — react accordingly). Produce ONE social-media "
+                f"reaction. Pick exactly ONE action from this menu:\n"
                 f"  {action_menu}\n\n"
                 f"Brief:\n{parent.text}\n\n"
                 f"Reply as JSON: {{\"action\": \"<one of menu>\", "
